@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "creation": "2026-07-23 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "engine": "InnoDB",
+ "field_order": [
+  "store_fee_generation",
+  "fee_item",
+  "sb0",
+  "last_generated_period"
+ ],
+ "fields": [
+  {
+   "default": "Manual",
+   "description": "Manual: someone must click \"Generate Now\" each month. Cron (Automatic Monthly): the 1st of every month, statements + Sales Invoices for the previous month are created and submitted automatically for every eligible store.",
+   "fieldname": "store_fee_generation",
+   "fieldtype": "Select",
+   "label": "Store Fee Generation",
+   "options": "Manual\nCron (Automatic Monthly)",
+   "reqd": 1
+  },
+  {
+   "default": "Store Fee",
+   "fieldname": "fee_item",
+   "fieldtype": "Link",
+   "label": "Fee Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sb0",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "last_generated_period",
+   "fieldtype": "Data",
+   "label": "Last Generated Period",
+   "read_only": 1
+  }
+ ],
+ "icon": "fa fa-cog",
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Store Partnership",
+ "name": "Store Partnership Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -150,23 +150,11 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"store_partnership.tasks.all"
-# 	],
-# 	"daily": [
-# 		"store_partnership.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"store_partnership.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"store_partnership.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"store_partnership.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"monthly": [
+		"store_partnership.tasks.monthly",
+	],
+}
 
 # Testing
 # -------

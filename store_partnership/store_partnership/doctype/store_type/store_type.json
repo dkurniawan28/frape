@@ -13,6 +13,7 @@
   "cb0",
   "requires_pks",
   "settlement_model",
+  "fee_percentage",
   "sb0",
   "default_price_list",
   "default_tax_rule",
@@ -58,6 +59,14 @@
    "fieldtype": "Select",
    "label": "Settlement Model",
    "options": "None\nRoyalty\nProfit Share"
+  },
+  {
+   "depends_on": "eval:doc.settlement_model && doc.settlement_model != \"None\"",
+   "description": "Percentage of monthly POS sales charged as store fee.",
+   "fieldname": "fee_percentage",
+   "fieldtype": "Percent",
+   "label": "Fee Percentage",
+   "mandatory_depends_on": "eval:doc.settlement_model && doc.settlement_model != \"None\""
   },
   {
    "fieldname": "sb0",
