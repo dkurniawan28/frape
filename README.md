@@ -2,6 +2,9 @@
 
 Manajemen tipe store dan PKS partner
 
+📖 Dokumentasi lengkap flow bisnis (POS per store, piutang fee bulanan, order material,
+ongkir) dan API (`create_store_sales_order`, `create_pos_sale`): [docs/flows_and_api.md](docs/flows_and_api.md)
+
 ### Installation
 
 You can install this app using the [bench](https://github.com/frappe/bench) CLI:
