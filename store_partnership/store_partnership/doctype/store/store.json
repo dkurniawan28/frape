@@ -13,6 +13,7 @@
   "cb0",
   "partner",
   "warehouse",
+  "pos_profile",
   "city",
   "sb0",
   "active_pks"
@@ -56,6 +57,13 @@
    "fieldtype": "Link",
    "label": "Warehouse",
    "options": "Warehouse"
+  },
+  {
+   "description": "Used by the POS sale API (store_partnership.api.create_pos_sale) to know which POS Profile / payment methods this store's transactions post against.",
+   "fieldname": "pos_profile",
+   "fieldtype": "Link",
+   "label": "POS Profile",
+   "options": "POS Profile"
   },
   {
    "fieldname": "city",
