@@ -1,0 +1,169 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:agreement_no",
+ "creation": "2026-07-23 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "engine": "InnoDB",
+ "field_order": [
+  "agreement_no",
+  "store",
+  "status",
+  "cb0",
+  "store_type",
+  "partner",
+  "sb0",
+  "effective_date",
+  "end_date",
+  "cb1",
+  "royalty_percent",
+  "profit_share_percent",
+  "sb1",
+  "price_list",
+  "tax_rule",
+  "sb2",
+  "notes",
+  "attachment"
+ ],
+ "fields": [
+  {
+   "fieldname": "agreement_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Agreement No",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Store",
+   "options": "Store",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nActive\nExpired\nTerminated"
+  },
+  {
+   "fieldname": "cb0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "store.store_type",
+   "fieldname": "store_type",
+   "fieldtype": "Data",
+   "label": "Store Type",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "store.partner",
+   "fieldname": "partner",
+   "fieldtype": "Link",
+   "label": "Partner",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sb0",
+   "fieldtype": "Section Break",
+   "label": "Masa Berlaku"
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "label": "Effective Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.store_type==\"FRC\"",
+   "fieldname": "royalty_percent",
+   "fieldtype": "Percent",
+   "label": "Royalty Percent"
+  },
+  {
+   "depends_on": "eval:doc.store_type==\"APL\"",
+   "fieldname": "profit_share_percent",
+   "fieldtype": "Percent",
+   "label": "Profit Share Percent"
+  },
+  {
+   "fieldname": "sb1",
+   "fieldtype": "Section Break",
+   "label": "Override Konfigurasi"
+  },
+  {
+   "fieldname": "price_list",
+   "fieldtype": "Link",
+   "label": "Price List",
+   "options": "Price List"
+  },
+  {
+   "fieldname": "tax_rule",
+   "fieldtype": "Link",
+   "label": "Tax Rule",
+   "options": "Tax Rule"
+  },
+  {
+   "fieldname": "sb2",
+   "fieldtype": "Section Break",
+   "label": "Lampiran"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "attachment",
+   "fieldtype": "Attach",
+   "label": "Attachment"
+  }
+ ],
+ "icon": "fa fa-file-text",
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-07-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Store Partnership",
+ "name": "PKS Agreement",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

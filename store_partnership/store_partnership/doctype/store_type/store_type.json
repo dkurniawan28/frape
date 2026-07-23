@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:type_code",
+ "creation": "2026-07-23 00:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "engine": "InnoDB",
+ "field_order": [
+  "type_code",
+  "type_name",
+  "operated_by",
+  "cb0",
+  "requires_pks",
+  "settlement_model",
+  "sb0",
+  "default_price_list",
+  "default_tax_rule",
+  "is_active"
+ ],
+ "fields": [
+  {
+   "fieldname": "type_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Type Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "type_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Type Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "operated_by",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Operated By",
+   "options": "Company\nPartner",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "requires_pks",
+   "fieldtype": "Check",
+   "label": "Requires PKS"
+  },
+  {
+   "default": "None",
+   "fieldname": "settlement_model",
+   "fieldtype": "Select",
+   "label": "Settlement Model",
+   "options": "None\nRoyalty\nProfit Share"
+  },
+  {
+   "fieldname": "sb0",
+   "fieldtype": "Section Break",
+   "label": "Default"
+  },
+  {
+   "fieldname": "default_price_list",
+   "fieldtype": "Link",
+   "label": "Default Price List",
+   "options": "Price List"
+  },
+  {
+   "fieldname": "default_tax_rule",
+   "fieldtype": "Link",
+   "label": "Default Tax Rule",
+   "options": "Tax Rule"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  }
+ ],
+ "icon": "fa fa-tags",
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Store Partnership",
+ "name": "Store Type",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
