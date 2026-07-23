@@ -1,0 +1,616 @@
+<title>Store Partnership — Flow &amp; API Reference</title>
+<style>
+  :root {
+    --bg: #F0EEE4;
+    --surface: #FAF8F1;
+    --surface-raised: #FFFFFF;
+    --ink: #1C2321;
+    --ink-muted: #565F5A;
+    --ink-faint: #8B948D;
+    --border: #D8D2C2;
+    --border-strong: #BFB8A4;
+    --accent: #0F6B66;
+    --accent-ink: #FFFFFF;
+    --good: #3F7D4F;
+    --good-bg: #E3EEE3;
+    --warn: #A66A15;
+    --warn-bg: #F3E7D0;
+    --tag-pos: #2E5A8C;
+    --tag-pos-bg: #E3ECF4;
+    --tag-fee: #0F6B66;
+    --tag-fee-bg: #DCEEEC;
+    --tag-ship: #7A4FA0;
+    --tag-ship-bg: #EEE3F5;
+    --code-bg: #1C2321;
+    --code-ink: #E7ECE6;
+    --code-muted: #838F87;
+    --code-accent: #6FD6C9;
+    --code-str: #C9D98A;
+    --shadow: 0 1px 2px rgba(28, 35, 33, 0.07), 0 4px 16px rgba(28, 35, 33, 0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10171A;
+      --surface: #161F21;
+      --surface-raised: #1C2628;
+      --ink: #E6ECE9;
+      --ink-muted: #9AA9A3;
+      --ink-faint: #62716C;
+      --border: #2A3638;
+      --border-strong: #3A4749;
+      --accent: #4FC2B6;
+      --accent-ink: #0B1213;
+      --good: #6FBE83;
+      --good-bg: #1C3325;
+      --warn: #E3B15C;
+      --warn-bg: #3A2C15;
+      --tag-pos: #8FB6DE;
+      --tag-pos-bg: #1E2C3B;
+      --tag-fee: #4FC2B6;
+      --tag-fee-bg: #16302C;
+      --tag-ship: #C6A6E3;
+      --tag-ship-bg: #2C2038;
+      --code-bg: #0B1112;
+      --code-ink: #DCE6E1;
+      --code-muted: #6B7975;
+      --code-accent: #6FD6C9;
+      --code-str: #A9C98A;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10171A; --surface: #161F21; --surface-raised: #1C2628;
+    --ink: #E6ECE9; --ink-muted: #9AA9A3; --ink-faint: #62716C;
+    --border: #2A3638; --border-strong: #3A4749;
+    --accent: #4FC2B6; --accent-ink: #0B1213;
+    --good: #6FBE83; --good-bg: #1C3325; --warn: #E3B15C; --warn-bg: #3A2C15;
+    --tag-pos: #8FB6DE; --tag-pos-bg: #1E2C3B;
+    --tag-fee: #4FC2B6; --tag-fee-bg: #16302C;
+    --tag-ship: #C6A6E3; --tag-ship-bg: #2C2038;
+    --code-bg: #0B1112; --code-ink: #DCE6E1; --code-muted: #6B7975; --code-accent: #6FD6C9; --code-str: #A9C98A;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+  :root[data-theme="light"] {
+    --bg: #F0EEE4; --surface: #FAF8F1; --surface-raised: #FFFFFF;
+    --ink: #1C2321; --ink-muted: #565F5A; --ink-faint: #8B948D;
+    --border: #D8D2C2; --border-strong: #BFB8A4;
+    --accent: #0F6B66; --accent-ink: #FFFFFF;
+    --good: #3F7D4F; --good-bg: #E3EEE3; --warn: #A66A15; --warn-bg: #F3E7D0;
+    --tag-pos: #2E5A8C; --tag-pos-bg: #E3ECF4;
+    --tag-fee: #0F6B66; --tag-fee-bg: #DCEEEC;
+    --tag-ship: #7A4FA0; --tag-ship-bg: #EEE3F5;
+    --code-bg: #1C2321; --code-ink: #E7ECE6; --code-muted: #838F87; --code-accent: #6FD6C9; --code-str: #C9D98A;
+    --shadow: 0 1px 2px rgba(28, 35, 33, 0.07), 0 4px 16px rgba(28, 35, 33, 0.06);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--tag-fee-bg); color: var(--ink); }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px;
+  }
+
+  h1, h2, h3 {
+    font-family: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, "Noto Serif", serif;
+    font-weight: 700;
+    color: var(--ink);
+    text-wrap: balance;
+    line-height: 1.22;
+  }
+  code, .mono, pre, .field-name, .field-type, .node .n-title, .endpoint {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  code {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.1rem 0.35rem;
+    font-size: 0.86em;
+  }
+
+  .shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 6rem;
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 3rem;
+    align-items: start;
+  }
+  @media (max-width: 920px) {
+    .shell { grid-template-columns: 1fr; gap: 1.25rem; padding: 1.5rem 1.1rem 4rem; }
+  }
+
+  nav.toc {
+    position: sticky; top: 2rem;
+    display: flex; flex-direction: column; gap: 0.05rem;
+  }
+  @media (max-width: 920px) {
+    nav.toc {
+      position: static; flex-direction: row; flex-wrap: nowrap; overflow-x: auto;
+      gap: 1rem; padding: 0 0 0.75rem; border-bottom: 1px solid var(--border); margin-bottom: 0.25rem;
+    }
+  }
+  nav.toc .eyebrow {
+    font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--ink-faint); margin-bottom: 0.6rem;
+  }
+  @media (max-width: 920px) { nav.toc .eyebrow { display: none; } }
+  nav.toc a {
+    color: var(--ink-muted); text-decoration: none; font-size: 0.85rem; white-space: nowrap;
+    border-left: 2px solid transparent; padding: 0.32rem 0 0.32rem 0.7rem;
+  }
+  @media (max-width: 920px) { nav.toc a { border-left: none; border-bottom: 2px solid transparent; padding: 0 0 0.4rem; } }
+  nav.toc a:hover { color: var(--ink); border-color: var(--border-strong); }
+  nav.toc a.sub { padding-left: 1.4rem; font-size: 0.8rem; color: var(--ink-faint); }
+  @media (max-width: 920px) { nav.toc a.sub { display: none; } }
+
+  main { min-width: 0; }
+
+  header.doc-head { padding-bottom: 2rem; margin-bottom: 2.75rem; border-bottom: 1px solid var(--border); }
+  .doc-meta { display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center; margin-bottom: 1.15rem; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: 0.68rem; letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 0.3rem 0.65rem; border-radius: 3px; border: 1px solid var(--border-strong); color: var(--ink-muted);
+  }
+  .pill.good { color: var(--good); border-color: var(--good); }
+  h1.doc-title { font-size: 2.25rem; margin: 0 0 0.55rem; }
+  p.doc-sub { font-size: 1.06rem; color: var(--ink-muted); margin: 0; max-width: 46em; }
+
+  section { margin-bottom: 3.5rem; }
+  section > .kicker {
+    font-size: 0.72rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem;
+  }
+  h2 { font-size: 1.55rem; margin: 0 0 0.9rem; }
+  h3 { font-size: 1.08rem; margin: 1.9rem 0 0.8rem; }
+  h4 { font-size: 0.95rem; margin: 1.4rem 0 0.6rem; color: var(--ink); font-family: system-ui, sans-serif; font-weight: 700; }
+  p { margin: 0 0 1rem; max-width: 66ch; }
+  p.wide { max-width: none; }
+  ul.plain, ol.plain { margin: 0 0 1rem; padding-left: 1.2rem; max-width: 66ch; }
+  ul.plain li, ol.plain li { margin-bottom: 0.45rem; }
+  .lede { font-size: 1.05rem; color: var(--ink-muted); max-width: 60ch; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 4px; padding: 1rem 1.2rem; margin: 1.3rem 0;
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .label {
+    font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 0.4rem; font-weight: 700; font-family: system-ui, sans-serif;
+  }
+  .callout.warn .label { color: var(--warn); }
+
+  /* overview diagram: 3 parallel lanes */
+  .lanes-wrap { overflow-x: auto; margin: 1.6rem 0; }
+  .lanes { display: grid; grid-template-columns: repeat(3, minmax(230px, 1fr)); gap: 1.1rem; min-width: 720px; }
+  .lane { display: flex; flex-direction: column; gap: 0; }
+  .lane-label {
+    font-size: 0.68rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 0.6rem; text-align: center;
+  }
+  .node {
+    background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: 6px;
+    padding: 0.85rem 1rem; box-shadow: var(--shadow); font-size: 0.83rem; text-align: center;
+  }
+  .node .n-title { font-weight: 700; color: var(--ink); display: block; margin-bottom: 0.2rem; font-size: 0.86rem; }
+  .node .n-sub { color: var(--ink-faint); font-size: 0.74rem; font-family: system-ui, sans-serif; }
+  .node.hub { border-color: var(--accent); }
+  .node.invoice.pos { border-color: var(--tag-pos); }
+  .node.invoice.fee { border-color: var(--tag-fee); }
+  .node.invoice.ship { border-color: var(--tag-ship); }
+  .lane-arrow { text-align: center; color: var(--ink-faint); font-size: 1rem; padding: 0.3rem 0; line-height: 1; }
+
+  .spec-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin: 1.3rem 0 2rem; overflow: hidden; }
+  .spec-card .spec-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border); background: var(--surface-raised); flex-wrap: wrap;
+  }
+  .spec-head .doctype-name { font-family: ui-monospace, monospace; font-weight: 700; font-size: 0.95rem; }
+  .spec-head .doctype-flag { font-size: 0.72rem; color: var(--ink-faint); font-family: system-ui, sans-serif; }
+  .table-scroll { overflow-x: auto; }
+  table.spec { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  table.spec th {
+    text-align: left; font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint);
+    font-weight: 700; padding: 0.6rem 1.1rem; border-bottom: 1px solid var(--border); font-family: system-ui, sans-serif;
+  }
+  table.spec td { padding: 0.65rem 1.1rem; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--ink-muted); }
+  table.spec tr:last-child td { border-bottom: none; }
+  table.spec td.field-name { color: var(--ink); font-size: 0.83rem; white-space: nowrap; }
+  table.spec td.field-type { font-size: 0.78rem; color: var(--accent); white-space: nowrap; }
+  table.spec td.field-note { max-width: 36ch; }
+
+  .tag { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 0.16rem 0.55rem; border-radius: 3px; font-family: system-ui, sans-serif; }
+  .tag.pos { color: var(--tag-pos); background: var(--tag-pos-bg); }
+  .tag.fee { color: var(--tag-fee); background: var(--tag-fee-bg); }
+  .tag.ship { color: var(--tag-ship); background: var(--tag-ship-bg); }
+
+  .status { display: inline-flex; align-items: center; gap: 0.4rem; font-family: system-ui, sans-serif; font-weight: 700; font-size: 0.82rem; }
+  .status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; flex: none; }
+  .status.draft { color: var(--ink-faint); } .status.draft::before { background: var(--ink-faint); }
+  .status.calc { color: var(--warn); } .status.calc::before { background: var(--warn); }
+  .status.done { color: var(--good); } .status.done::before { background: var(--good); }
+
+  ol.steps { list-style: none; margin: 1.4rem 0; padding: 0; counter-reset: step; display: flex; flex-direction: column; gap: 0; border-left: 2px solid var(--border); }
+  ol.steps li { position: relative; padding: 0 0 1.6rem 1.5rem; counter-increment: step; }
+  ol.steps li:last-child { padding-bottom: 0; }
+  ol.steps li::before {
+    content: counter(step); position: absolute; left: -13px; top: 0; width: 24px; height: 24px;
+    border-radius: 50%; background: var(--surface-raised); border: 2px solid var(--border-strong);
+    display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700;
+    color: var(--ink-muted); font-family: system-ui, sans-serif;
+  }
+  ol.steps li strong { color: var(--ink); }
+  ol.steps li p { margin: 0.25rem 0 0; font-size: 0.93rem; }
+
+  .trigger-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 1.1rem 0 1.5rem; }
+  .trigger-table th { text-align: left; font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--border-strong); font-family: system-ui, sans-serif; }
+  .trigger-table td { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .trigger-table tr:last-child td { border-bottom: none; }
+
+  .endpoint {
+    font-size: 0.85rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+    padding: 0.6rem 0.9rem; color: var(--ink); margin: 0.9rem 0 1.25rem; display: inline-block;
+  }
+  .endpoint .verb { color: var(--accent); font-weight: 700; margin-right: 0.5rem; }
+
+  .code-wrap { overflow-x: auto; margin: 1.25rem 0; border-radius: 6px; box-shadow: var(--shadow); }
+  pre.code { margin: 0; background: var(--code-bg); color: var(--code-ink); padding: 1.15rem 1.3rem; font-size: 0.82rem; line-height: 1.65; white-space: pre; }
+  pre.code .kw { color: var(--code-accent); }
+  pre.code .cm { color: var(--code-muted); font-style: italic; }
+  pre.code .str { color: var(--code-str); }
+
+  .param-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1.1rem 0 1.5rem; }
+  .param-table th { text-align: left; font-size: 0.68rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-faint); padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--border-strong); font-family: system-ui, sans-serif; }
+  .param-table td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .param-table tr:last-child td { border-bottom: none; }
+  .param-table td.pname { font-family: ui-monospace, monospace; font-size: 0.82rem; color: var(--ink); white-space: nowrap; }
+  .param-table td.preq { font-size: 0.78rem; white-space: nowrap; }
+  .req-yes { color: var(--accent); font-weight: 700; }
+  .req-no { color: var(--ink-faint); }
+
+  .err-list { display: flex; flex-direction: column; gap: 0.7rem; margin: 1rem 0 1.5rem; }
+  .err-item { display: grid; grid-template-columns: minmax(180px, 260px) 1fr; gap: 0.9rem; padding: 0.7rem 0.9rem; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; font-size: 0.86rem; }
+  @media (max-width: 640px) { .err-item { grid-template-columns: 1fr; } }
+  .err-item code { display: inline-block; }
+
+  .oq-list { display: flex; flex-direction: column; gap: 0.9rem; margin: 1.25rem 0; }
+  .oq-item { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0.7rem; padding: 0.9rem 1.05rem; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; }
+  .oq-item .oq-mark { color: var(--warn); font-family: ui-monospace, monospace; font-size: 0.85rem; }
+  .oq-item p { margin: 0; font-size: 0.92rem; max-width: none; }
+
+  footer.doc-foot { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--ink-faint); font-size: 0.8rem; }
+</style>
+
+<div class="shell">
+  <nav class="toc">
+    <span class="eyebrow">Isi Dokumen</span>
+    <a href="#ringkasan">Ringkasan Sistem</a>
+    <a href="#model-data">Model Data</a>
+    <a href="#flow-pos">Transaksi POS</a>
+    <a href="#flow-fee">Piutang Fee Bulanan</a>
+    <a href="#flow-order">Order Material</a>
+    <a href="#flow-ongkir">Ongkir Terpisah</a>
+    <a href="#sesi-pos">Sesi POS (internal)</a>
+    <a href="#api">API Reference</a>
+    <a href="#field-index">Ringkasan Field</a>
+    <a href="#gaps">Batasan &amp; Ide Lanjutan</a>
+  </nav>
+
+  <main>
+    <header class="doc-head">
+      <div class="doc-meta">
+        <span class="pill good">● Berjalan di Produksi</span>
+        <span class="pill">store_partnership</span>
+        <span class="pill">23 Juli 2026</span>
+      </div>
+      <h1 class="doc-title">Store Partnership — Flow &amp; API Reference</h1>
+      <p class="doc-sub">Dokumentasi lengkap untuk semua flow bisnis dan API yang sudah dibangun: transaksi POS per store, piutang fee bulanan (royalty/profit share), order material antar store, ongkir terpisah, dan dua endpoint integrasi eksternal.</p>
+    </header>
+
+    <section id="ringkasan">
+      <div class="kicker">Bagaimana semua terhubung</div>
+      <h2>Satu Store, tiga jalur invoice</h2>
+      <p class="lede">Semua flow berawal dari entitas <code>Store</code>. Dari satu store, ada tiga jalur transaksi yang masing-masing bermuara ke <strong>Sales Invoice terpisah</strong> — sengaja tidak pernah digabung, supaya piutang penjualan, fee kemitraan, dan ongkir masing-masing bisa ditagih dan direkonsiliasi sendiri-sendiri.</p>
+
+      <div class="lanes-wrap">
+        <div class="lanes">
+          <div class="lane">
+            <div class="lane-label">Jalur 1 — Penjualan POS</div>
+            <div class="node hub"><span class="n-title">create_pos_sale API</span><span class="n-sub">atau input POS langsung</span></div>
+            <div class="lane-arrow">↓</div>
+            <div class="node"><span class="n-title">Sales Invoice (is_pos=1)</span><span class="n-sub">field store terisi otomatis</span></div>
+            <div class="lane-arrow">↓ akumulasi bulanan</div>
+            <div class="node invoice fee"><span class="n-title">Store Fee Statement</span><span class="n-sub">→ Sales Invoice piutang fee</span></div>
+          </div>
+          <div class="lane">
+            <div class="lane-label">Jalur 2 — Order Material</div>
+            <div class="node hub"><span class="n-title">create_store_sales_order API</span><span class="n-sub">atau staf input di Desk</span></div>
+            <div class="lane-arrow">↓</div>
+            <div class="node"><span class="n-title">Sales Order (store)</span><span class="n-sub">customer/price list auto-fill</span></div>
+            <div class="lane-arrow">↓ Delivery Note</div>
+            <div class="node invoice pos"><span class="n-title">Sales Invoice</span><span class="n-sub">piutang material</span></div>
+          </div>
+          <div class="lane">
+            <div class="lane-label">Jalur 3 — Ongkir</div>
+            <div class="node hub"><span class="n-title">Staf input manual</span><span class="n-sub">biaya kirim per pengiriman</span></div>
+            <div class="lane-arrow">↓</div>
+            <div class="node"><span class="n-title">Store Shipping Charge</span><span class="n-sub">opsional rujuk ke Sales Order</span></div>
+            <div class="lane-arrow">↓ Create Sales Invoice</div>
+            <div class="node invoice ship"><span class="n-title">Sales Invoice</span><span class="n-sub">piutang ongkir, terpisah</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="wide">Ketiga jalur menagih ke customer yang sama — <code>Store.partner</code> — tapi lewat tiga dokumen Sales Invoice yang berdiri sendiri. Semuanya otomatis masuk ke <strong>Accounts Receivable / AR Aging</strong> standar ERPNext, tidak perlu laporan tambahan untuk melihat piutang per partner.</p>
+    </section>
+
+    <section id="model-data">
+      <div class="kicker">Fondasi</div>
+      <h2>Model data inti</h2>
+      <p>Empat doctype ini menjadi dasar seluruh flow di dokumen ini.</p>
+
+      <div class="spec-card">
+        <div class="spec-head"><span class="doctype-name">Store Type</span><span class="doctype-flag">master · not submittable</span></div>
+        <div class="table-scroll">
+          <table class="spec">
+            <thead><tr><th>Field</th><th>Tipe</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td class="field-name">type_code</td><td class="field-type">Data</td><td class="field-note">Kode singkat, mis. <code>OWN</code>, <code>FRC</code>, <code>APL</code></td></tr>
+              <tr><td class="field-name">operated_by</td><td class="field-type">Select</td><td class="field-note"><code>Company</code> / <code>Partner</code></td></tr>
+              <tr><td class="field-name">settlement_model</td><td class="field-type">Select</td><td class="field-note"><code>None</code> / <code>Royalty</code> / <code>Profit Share</code></td></tr>
+              <tr><td class="field-name">fee_percentage</td><td class="field-type">Percent</td><td class="field-note">Wajib bila settlement_model ≠ None. Dipakai Store Fee Statement (§ Piutang Fee Bulanan).</td></tr>
+              <tr><td class="field-name">default_price_list</td><td class="field-type">Link → Price List</td><td class="field-note">Default untuk Sales Order store tipe ini</td></tr>
+              <tr><td class="field-name">default_tax_rule</td><td class="field-type">Link → Tax Rule</td><td class="field-note">Resolve ke Sales Taxes and Charges Template</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-head"><span class="doctype-name">Store</span><span class="doctype-flag">master · hub semua flow</span></div>
+        <div class="table-scroll">
+          <table class="spec">
+            <thead><tr><th>Field</th><th>Tipe</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td class="field-name">store_type</td><td class="field-type">Link → Store Type</td><td class="field-note"></td></tr>
+              <tr><td class="field-name">company</td><td class="field-type">Link → Company</td><td class="field-note"></td></tr>
+              <tr><td class="field-name">partner</td><td class="field-type">Link → Customer</td><td class="field-note">Ditagih untuk ketiga jalur piutang (fee, material, ongkir)</td></tr>
+              <tr><td class="field-name">warehouse</td><td class="field-type">Link → Warehouse</td><td class="field-note">Dipakai untuk auto-fill field <code>store</code> di transaksi POS</td></tr>
+              <tr><td class="field-name">pos_profile</td><td class="field-type">Link → POS Profile</td><td class="field-note">Wajib untuk pakai API <code>create_pos_sale</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="spec-card">
+        <div class="spec-head"><span class="doctype-name">Store Partnership Settings</span><span class="doctype-flag">single · menu Setting</span></div>
+        <div class="table-scroll">
+          <table class="spec">
+            <thead><tr><th>Field</th><th>Default</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td class="field-name">store_fee_generation</td><td class="field-type">Manual</td><td class="field-note"><code>Manual</code> = klik "Generate Now". <code>Cron (Automatic Monthly)</code> = scheduler jalan otomatis tiap tanggal 1.</td></tr>
+              <tr><td class="field-name">fee_item</td><td class="field-type">Store Fee</td><td class="field-note">Item baris Sales Invoice piutang fee</td></tr>
+              <tr><td class="field-name">shipping_item</td><td class="field-type">Shipping Charge</td><td class="field-note">Item baris Sales Invoice ongkir</td></tr>
+              <tr><td class="field-name">last_generated_period</td><td class="field-type">—</td><td class="field-note">Read-only, diisi otomatis setelah generate</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <div class="label">Batasan yang perlu diketahui</div>
+        <p><code>fee_percentage</code> di Store Type adalah <strong>satu angka untuk semua store bertipe sama</strong>. Kalau tarif riil berbeda per store (biasanya tercatat di <code>PKS Agreement.royalty_percent</code> / <code>profit_share_percent</code>), Store Fee Statement <strong>belum</strong> otomatis membaca angka per-PKS itu. Detail di § Batasan &amp; Ide Lanjutan.</p>
+      </div>
+    </section>
+
+    <section id="flow-pos">
+      <div class="kicker">Jalur 1</div>
+      <h2>Transaksi POS: field <code>store</code> &amp; filter by Company/Store</h2>
+      <p><strong>Masalah awal</strong>: transaksi POS bisa dilihat di invoice tapi tidak bisa difilter per company/store.</p>
+      <p><strong>Solusi</strong>: custom field <code>store</code> (Link → Store) ditambahkan ke <code>POS Invoice</code> (kalau site pakai doctype terpisah) dan <code>Sales Invoice</code> (kalau site pakai mode "Sales Invoice untuk POS", <code>is_pos=1</code>) — keduanya <code>in_list_view</code> dan <code>in_standard_filter</code>, otomatis jadi kolom &amp; filter standar sejajar dengan Company.</p>
+      <p>Hook <code>validate</code> (<code>pos_invoice_store.set_store_from_warehouse</code>) mengisi <code>store</code> otomatis dari kombinasi <code>set_warehouse</code> + <code>company</code>, dicocokkan ke <code>Store.warehouse</code>. Tidak menimpa kalau sudah diisi manual.</p>
+      <div class="callout">
+        <div class="label">Konfirmasi lingkungan</div>
+        <p>Site ini terkonfirmasi pakai mode <strong>"Sales Invoice untuk POS"</strong>, bukan doctype <code>POS Invoice</code> terpisah. Semua perhitungan total penjualan di dokumen ini (§ Piutang Fee Bulanan, § API) menghitung dari kedua sumber sekaligus supaya tetap kompatibel kalau mode site berubah.</p>
+      </div>
+    </section>
+
+    <section id="flow-fee">
+      <div class="kicker">Jalur 1 — Muara</div>
+      <h2>Piutang fee bulanan (<code>Store Fee Statement</code>)</h2>
+      <p class="lede">Menghitung &amp; menagihkan royalty/profit-share bulanan dari store partner ke company, otomatis jadi piutang riil di AR Aging.</p>
+
+      <h3>Store yang eligible</h3>
+      <p>Store dengan <code>partner</code> terisi <strong>dan</strong> <code>Store Type.settlement_model</code> ≠ <code>None</code>. Store tipe <code>OWN</code> (settlement None) otomatis dilewati.</p>
+
+      <h3>Alur generate</h3>
+      <ol class="steps">
+        <li><strong>Cek duplikat.</strong><p>Skip kalau sudah ada Store Fee Statement untuk store + periode yang sama — proses ini idempotent, aman dipanggil berulang.</p></li>
+        <li><strong>Hitung (<code>calculate_statement</code>).</strong><p><code>total_sales</code> = SUM(grand_total) dari POS Invoice + Sales Invoice (is_pos=1), submitted &amp; bukan return, untuk store &amp; periode itu. <code>fee_amount</code> = total_sales × fee_percentage / 100. Status → <span class="status calc">● Calculated</span>.</p></li>
+        <li><strong>Tagih (kalau fee_amount &gt; 0).</strong><p>Buat Sales Invoice baru ke <code>Store.partner</code>, 1 baris item (<code>fee_item</code>), langsung insert + submit. Status → <span class="status done">● Invoiced</span>, field <code>sales_invoice</code> terisi.</p></li>
+      </ol>
+
+      <h3>Cara trigger</h3>
+      <table class="trigger-table">
+        <thead><tr><th>Cara</th><th>Kapan jalan</th></tr></thead>
+        <tbody>
+          <tr><td>Tombol <strong>"Generate Now"</strong> di Store Partnership Settings</td><td>Kapan saja, manual, periode bebas (default bulan lalu)</td></tr>
+          <tr><td>Tombol <strong>"Calculate"</strong> → <strong>"Create Sales Invoice"</strong> di form Store Fee Statement</td><td>Per-store, satu-satu, untuk koreksi/kasus khusus</td></tr>
+          <tr><td>Scheduler bulanan (<code>tasks.monthly</code>)</td><td>Hanya kalau <code>store_fee_generation = "Cron (Automatic Monthly)"</code>. Default <code>Manual</code> → scheduler tidak melakukan apa-apa.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Status</h3>
+      <p><span class="status draft">● Draft</span> baru dibuat → <span class="status calc">● Calculated</span> sudah dihitung, belum ditagih → <span class="status done">● Invoiced</span> Sales Invoice sudah submit, tidak bisa diubah lagi.</p>
+    </section>
+
+    <section id="flow-order">
+      <div class="kicker">Jalur 2</div>
+      <h2>Order material dari store</h2>
+      <p>Custom field <code>store</code> di <code>Sales Order</code> (<code>in_list_view</code>, <code>in_standard_filter</code>). Hook <code>validate</code> (<code>sales_order_store.apply_store_defaults</code>) — begitu <code>store</code> dipilih, otomatis isi <strong>field yang masih kosong saja</strong> (tidak menimpa input manual):</p>
+      <ul class="plain">
+        <li><code>customer</code> ← <code>Store.partner</code></li>
+        <li><code>company</code> ← <code>Store.company</code></li>
+        <li><code>selling_price_list</code> ← <code>Store Type.default_price_list</code></li>
+        <li><code>taxes_and_charges</code> ← resolve dari <code>Store Type.default_tax_rule</code> → <code>Tax Rule.sales_tax_template</code></li>
+      </ul>
+      <p>Setelah itu alur normal ERPNext: Sales Order → Delivery Note → Sales Invoice (piutang material, terpisah dari fee &amp; ongkir).</p>
+    </section>
+
+    <section id="flow-ongkir">
+      <div class="kicker">Jalur 3</div>
+      <h2>Ongkir (<code>Store Shipping Charge</code>)</h2>
+      <p>Biaya kirim diinput manual dan ditagihkan <strong>terpisah</strong> dari invoice material.</p>
+      <div class="spec-card">
+        <div class="spec-head"><span class="doctype-name">Store Shipping Charge</span><span class="doctype-flag">Draft → Invoiced</span></div>
+        <div class="table-scroll">
+          <table class="spec">
+            <thead><tr><th>Field</th><th>Tipe</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td class="field-name">store</td><td class="field-type">Link → Store</td><td class="field-note">Wajib</td></tr>
+              <tr><td class="field-name">sales_order</td><td class="field-type">Link → Sales Order</td><td class="field-note">Opsional, referensi ke order material terkait</td></tr>
+              <tr><td class="field-name">customer, company</td><td class="field-type">read-only</td><td class="field-note">Auto-isi dari Store saat validate</td></tr>
+              <tr><td class="field-name">amount</td><td class="field-type">Currency</td><td class="field-note">Input manual biaya kirim</td></tr>
+              <tr><td class="field-name">sales_invoice</td><td class="field-type">read-only</td><td class="field-note">Terisi setelah "Create Sales Invoice"</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="wide">Tombol <strong>"Create Sales Invoice"</strong> → Sales Invoice baru &amp; terpisah ke <code>Store.partner</code>, 1 baris item (<code>shipping_item</code>). Hasilnya: <strong>1 Sales Order material bisa punya 2 invoice berbeda</strong> — barang dan ongkir tidak pernah digabung jadi satu invoice.</p>
+    </section>
+
+    <section id="sesi-pos">
+      <div class="kicker">Internal · dipakai oleh API §7.2</div>
+      <h2>Manajemen sesi POS</h2>
+      <p>ERPNext mewajibkan setiap Sales Invoice dengan <code>is_pos=1</code> terkait ke <strong>POS Opening Entry</strong> yang berstatus <code>Open</code> dan tanggalnya hari ini — hanya boleh ada satu per POS Profile. Modul <code>pos_session.get_or_open_pos_opening_entry()</code> menangani ini otomatis, caller (API §7.2) tidak perlu tahu mekanismenya.</p>
+      <ol class="steps">
+        <li><strong>Cari sesi yang open</strong> untuk POS Profile tsb.</li>
+        <li><strong>Kalau ada &amp; tanggalnya hari ini</strong> → dipakai langsung.</li>
+        <li><strong>Kalau ada tapi tanggalnya kemarin</strong> (sesi lupa ditutup) → otomatis ditutup dulu pakai <code>make_closing_entry_from_opening()</code> bawaan ERPNext (hitung ulang dari invoice-invoice yang masuk di sesi itu), baru buka sesi baru untuk hari ini.</li>
+        <li><strong>Kalau ada lebih dari satu yang open</strong> (kondisi tak terduga) → berhenti dengan error jelas, minta admin selesaikan manual di Desk. Sengaja tidak auto-close banyak sekaligus tanpa pengawasan.</li>
+        <li><strong>Kalau tidak ada sama sekali</strong> → buka baru, <code>opening_amount=0</code> untuk tiap payment method di POS Profile itu.</li>
+      </ol>
+    </section>
+
+    <section id="api">
+      <div class="kicker">Integrasi eksternal</div>
+      <h2>API Reference</h2>
+      <p>Kedua endpoint di bawah adalah method <strong>whitelisted</strong> Frappe, dipanggil lewat REST:</p>
+      <div class="code-wrap"><pre class="code"><span class="kw">POST</span> /api/method/store_partnership.api.&lt;nama_fungsi&gt;
+Authorization: token &lt;api_key&gt;:&lt;api_secret&gt;
+Content-Type: application/json</pre></div>
+      <p>API key/secret dibuat per User lewat Desk (<strong>User</strong> → <strong>API Access</strong> → <strong>Generate Keys</strong>). Permission mengikuti role user tsb.</p>
+
+      <h3 id="api-order">7.1 · create_store_sales_order</h3>
+      <p>Order material dari store ke company. Ditinggalkan sebagai <span class="status draft">● Draft</span> secara default supaya staf sempat review — tidak otomatis "selesai" begitu API dipanggil.</p>
+      <div class="endpoint"><span class="verb">POST</span>store_partnership.api.create_store_sales_order</div>
+      <table class="param-table">
+        <thead><tr><th>Parameter</th><th>Wajib</th><th>Keterangan</th></tr></thead>
+        <tbody>
+          <tr><td class="pname">store</td><td class="preq req-yes">Wajib</td><td>Nama Store, mis. <code>STR-00002</code></td></tr>
+          <tr><td class="pname">items</td><td class="preq req-yes">Wajib</td><td><code>[{"item_code", "qty", "rate"?, "warehouse"?}]</code>. <code>warehouse</code> wajib untuk item stock kalau tak ada default lain.</td></tr>
+          <tr><td class="pname">delivery_date</td><td class="preq req-no">Opsional</td><td>Default: hari ini + 7 hari</td></tr>
+          <tr><td class="pname">submit</td><td class="preq req-no">Opsional</td><td>Default <code>0</code> (Draft). Set <code>1</code> untuk langsung submit tanpa review.</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Return</strong>: <code>{"name": "SAL-ORD-2026-00006", "docstatus": 0}</code></p>
+      <div class="code-wrap"><pre class="code"><span class="kw">curl</span> -X POST https://&lt;site&gt;/api/method/store_partnership.api.create_store_sales_order \
+  -H <span class="str">"Authorization: token &lt;api_key&gt;:&lt;api_secret&gt;"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "store": "STR-00002",
+    "items": [
+      {"item_code": "PRD-A", "qty": 20, "rate": 100000, "warehouse": "Finished Goods - PDJD"}
+    ]
+  }'</span></pre></div>
+      <h4>Error umum</h4>
+      <div class="err-list">
+        <div class="err-item"><code>Store {0} not found</code><span>Nama store salah / tidak ada.</span></div>
+        <div class="err-item"><code>At least one item is required</code><span><code>items</code> kosong.</span></div>
+        <div class="err-item"><code>Source warehouse required for stock item ...</code><span>Item stock tapi <code>warehouse</code> tidak dikirim &amp; tidak ada default lain (dari ERPNext sendiri).</span></div>
+      </div>
+
+      <h3 id="api-pos">7.2 · create_pos_sale</h3>
+      <p>Posting transaksi POS yang <strong>sudah closed/paid</strong> di sistem POS store, langsung jadi Sales Invoice <span class="status done">● submitted</span> — bukan draft, karena transaksi dianggap sudah final &amp; terbayar.</p>
+      <div class="endpoint"><span class="verb">POST</span>store_partnership.api.create_pos_sale</div>
+      <table class="param-table">
+        <thead><tr><th>Parameter</th><th>Wajib</th><th>Keterangan</th></tr></thead>
+        <tbody>
+          <tr><td class="pname">store</td><td class="preq req-yes">Wajib</td><td>Harus sudah punya <code>pos_profile</code> terisi</td></tr>
+          <tr><td class="pname">items</td><td class="preq req-yes">Wajib</td><td><code>[{"item_code", "qty", "rate"?, "warehouse"?}]</code>. <code>warehouse</code> default ke <code>Store.warehouse</code>.</td></tr>
+          <tr><td class="pname">payments</td><td class="preq req-yes">Wajib</td><td><code>[{"mode_of_payment", "amount"}]</code>, total harus menutup grand_total.</td></tr>
+          <tr><td class="pname">customer</td><td class="preq req-no">Opsional</td><td>Default: customer default di POS Profile store itu</td></tr>
+          <tr><td class="pname">posting_date</td><td class="preq req-no">Opsional</td><td>Default: hari ini</td></tr>
+          <tr><td class="pname">pos_reference</td><td class="preq req-no">Sangat disarankan</td><td>ID transaksi dari POS eksternal. Kalau sudah pernah dipakai, balikin invoice yang sama (<code>duplicate: true</code>) — bukan buat baru.</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Return</strong>: <code>{"name": "ACC-SINV-2026-00025", "docstatus": 1, "duplicate": false}</code></p>
+      <div class="code-wrap"><pre class="code"><span class="kw">curl</span> -X POST https://&lt;site&gt;/api/method/store_partnership.api.create_pos_sale \
+  -H <span class="str">"Authorization: token &lt;api_key&gt;:&lt;api_secret&gt;"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "store": "STR-00002",
+    "items": [{"item_code": "SKU001", "qty": 1, "rate": 50000}],
+    "payments": [{"mode_of_payment": "Cash", "amount": 50000}],
+    "pos_reference": "TRX-KEMANG-20260723-0001"
+  }'</span></pre></div>
+      <h4>Error umum</h4>
+      <div class="err-list">
+        <div class="err-item"><code>Store {0} has no POS Profile configured.</code><span>Isi dulu <code>Store.pos_profile</code>.</span></div>
+        <div class="err-item"><code>At least one payment is required</code><span><code>payments</code> kosong.</span></div>
+        <div class="err-item"><code>POS Profile {0} has multiple open POS Opening Entries...</code><span>Kondisi tak terduga (§ Sesi POS langkah 4), butuh penyelesaian manual sekali di Desk.</span></div>
+      </div>
+      <div class="callout warn">
+        <div class="label">Penting — idempotency</div>
+        <p>Selalu kirim <code>pos_reference</code> unik per transaksi dari sisi POS store. Tanpa ini, retry otomatis dari sistem POS (krn timeout dsb) akan membuat Sales Invoice dobel untuk penjualan yang sama.</p>
+      </div>
+    </section>
+
+    <section id="field-index">
+      <div class="kicker">Referensi cepat</div>
+      <h2>Ringkasan custom field</h2>
+      <div class="table-scroll">
+        <table class="spec">
+          <thead><tr><th>Doctype</th><th>Field</th><th>Tipe</th><th>Catatan</th></tr></thead>
+          <tbody>
+            <tr><td class="field-name">Store Type</td><td class="field-name">fee_percentage</td><td class="field-type">Percent</td><td class="field-note">Native field</td></tr>
+            <tr><td class="field-name">Store</td><td class="field-name">pos_profile</td><td class="field-type">Link POS Profile</td><td class="field-note">Native field</td></tr>
+            <tr><td class="field-name">POS Invoice</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field</td></tr>
+            <tr><td class="field-name">Sales Invoice</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field, <code>depends_on: is_pos</code></td></tr>
+            <tr><td class="field-name">Sales Invoice</td><td class="field-name">pos_reference</td><td class="field-type">Data</td><td class="field-note">Custom Field, idempotency §7.2</td></tr>
+            <tr><td class="field-name">Sales Order</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="wide">Semua Custom Field disinkronkan lewat patch (<code>bench migrate</code>), didefinisikan terpusat di <code>store_partnership/custom_fields.py</code>.</p>
+    </section>
+
+    <section id="gaps">
+      <div class="kicker">Untuk diskusi lanjutan</div>
+      <h2>Batasan &amp; ide lanjutan</h2>
+      <div class="oq-list">
+        <div class="oq-item"><span class="oq-mark">!</span><p><strong>Fee percentage per-store vs per-Store-Type.</strong> Kalau tarif riil beda per store, Store Fee Statement perlu diarahkan baca dari PKS Agreement aktif milik store itu, bukan dari Store Type.</p></div>
+        <div class="oq-item"><span class="oq-mark">!</span><p><strong>create_store_sales_order belum validasi stok</strong> saat insert — memang perilaku standar ERPNext, baru dicek saat Delivery Note.</p></div>
+        <div class="oq-item"><span class="oq-mark">!</span><p><strong>Belum ada Customer Portal / self-service</strong> untuk partner store order sendiri dari luar. API saat ini untuk dipanggil sistem eksternal (POS/ordering app milik store), bukan diakses langsung end-user.</p></div>
+        <div class="oq-item"><span class="oq-mark">!</span><p><strong>create_pos_sale belum menangani retur/void.</strong> Kalau transaksi dibatalkan di sisi store setelah ter-post, pembatalannya perlu ditangani manual (cancel Sales Invoice) atau butuh endpoint tambahan <code>create_pos_return</code>.</p></div>
+      </div>
+    </section>
+
+    <footer class="doc-foot">
+      Store Partnership · dokumen ini mengikuti kode per commit terakhir di repo <code>store_partnership</code>. Kalau ada perbedaan dengan yang terlihat di Desk, jalankan <code>bench migrate</code>.
+    </footer>
+  </main>
+</div>
