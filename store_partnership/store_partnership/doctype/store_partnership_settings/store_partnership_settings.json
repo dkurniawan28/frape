@@ -7,6 +7,7 @@
  "field_order": [
   "store_fee_generation",
   "fee_item",
+  "shipping_item",
   "sb0",
   "last_generated_period"
  ],
@@ -25,6 +26,15 @@
    "fieldname": "fee_item",
    "fieldtype": "Link",
    "label": "Fee Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "default": "Shipping Charge",
+   "description": "Item used on the separate Sales Invoice created from a Store Shipping Charge.",
+   "fieldname": "shipping_item",
+   "fieldtype": "Link",
+   "label": "Shipping Item",
    "options": "Item",
    "reqd": 1
   },

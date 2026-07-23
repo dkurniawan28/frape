@@ -6,3 +6,5 @@
 # Patches added in this section will be executed after doctypes are migrated
 store_partnership.patches.add_store_custom_field
 store_partnership.patches.create_store_fee_item
+store_partnership.patches.add_store_field_to_sales_order
+store_partnership.patches.create_shipping_charge_item

@@ -145,6 +145,9 @@ doc_events = {
 	"Sales Invoice": {
 		"validate": "store_partnership.pos_invoice_store.set_store_from_warehouse",
 	},
+	"Sales Order": {
+		"validate": "store_partnership.sales_order_store.apply_store_defaults",
+	},
 }
 
 # Scheduled Tasks
