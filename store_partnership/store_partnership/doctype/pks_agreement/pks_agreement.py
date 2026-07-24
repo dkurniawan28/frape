@@ -8,6 +8,12 @@ class PKSAgreement(Document):
 			self.status = "Active"
 			self.db_set("status", "Active")
 		self.sync_store()
+		self.create_onboarding_fee()
+
+	def create_onboarding_fee(self):
+		from store_partnership.store_onboarding import create_onboarding_fee_if_applicable
+
+		create_onboarding_fee_if_applicable(self)
 
 	def on_cancel(self):
 		if self.status == "Active":

@@ -14,6 +14,10 @@
   "requires_pks",
   "settlement_model",
   "fee_percentage",
+  "sb_onboarding",
+  "onboarding_fee",
+  "cb_onboarding",
+  "upgrade_fee",
   "sb0",
   "default_price_list",
   "default_tax_rule",
@@ -67,6 +71,28 @@
    "fieldtype": "Percent",
    "label": "Fee Percentage",
    "mandatory_depends_on": "eval:doc.settlement_model && doc.settlement_model != \"None\""
+  },
+  {
+   "depends_on": "eval:doc.settlement_model && doc.settlement_model != \"None\"",
+   "fieldname": "sb_onboarding",
+   "fieldtype": "Section Break",
+   "label": "Onboarding / Upgrade Fee (Harga Acuan)"
+  },
+  {
+   "description": "Base price saat sebuah store BARU dibuka dengan tipe ini (PKS Agreement pertama untuk store itu). Nominal final per partner tetap diisi manual di PKS Agreement.fee_amount, ini cuma acuan.",
+   "fieldname": "onboarding_fee",
+   "fieldtype": "Currency",
+   "label": "Onboarding Fee (Acuan)"
+  },
+  {
+   "fieldname": "cb_onboarding",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Base price saat store EXISTING pindah/upgrade ke tipe ini dari tipe lain (mis. Franchise ke Autopilot). Tidak berlaku untuk perpanjangan PKS dengan tipe yang sama.",
+   "fieldname": "upgrade_fee",
+   "fieldtype": "Currency",
+   "label": "Upgrade Fee (Acuan)"
   },
   {
    "fieldname": "sb0",

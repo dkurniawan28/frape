@@ -19,6 +19,8 @@
   "cb1",
   "royalty_percent",
   "profit_share_percent",
+  "sb_fee",
+  "fee_amount",
   "sb1",
   "price_list",
   "tax_rule",
@@ -101,6 +103,17 @@
    "fieldname": "profit_share_percent",
    "fieldtype": "Percent",
    "label": "Profit Share Percent"
+  },
+  {
+   "fieldname": "sb_fee",
+   "fieldtype": "Section Break",
+   "label": "Onboarding / Upgrade Fee"
+  },
+  {
+   "description": "Diisi manual, hasil negosiasi (bisa lewat Quotation terpisah kalau ada proses penawaran formal). Hanya ditagihkan sekali kalau PKS ini adalah PKS PERTAMA untuk store ini (onboarding) atau PKS dengan Store Type BEDA dari PKS aktif sebelumnya (upgrade) — perpanjangan PKS dengan Store Type sama tidak menagih apapun. Lihat Store Type untuk harga acuan (Onboarding Fee / Upgrade Fee). Kosongkan/0 kalau tidak ada fee.",
+   "fieldname": "fee_amount",
+   "fieldtype": "Currency",
+   "label": "Onboarding/Upgrade Fee (Nominal Final)"
   },
   {
    "fieldname": "sb1",

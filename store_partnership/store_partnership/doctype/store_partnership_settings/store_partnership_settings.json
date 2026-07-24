@@ -8,6 +8,7 @@
   "store_fee_generation",
   "fee_item",
   "shipping_item",
+  "onboarding_fee_item",
   "sb0",
   "last_generated_period"
  ],
@@ -35,6 +36,15 @@
    "fieldname": "shipping_item",
    "fieldtype": "Link",
    "label": "Shipping Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "default": "Franchise Onboarding Fee",
+   "description": "Item used on the Sales Invoice created from a Store Onboarding Fee (onboarding or upgrade).",
+   "fieldname": "onboarding_fee_item",
+   "fieldtype": "Link",
+   "label": "Onboarding Fee Item",
    "options": "Item",
    "reqd": 1
   },

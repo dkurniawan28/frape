@@ -66,14 +66,18 @@ def create_pos_sale(store, items, payments, customer=None, posting_date=None, po
 
 	Unlike create_store_sales_order (which leaves a Draft for staff review),
 	this represents a transaction the store's POS already closed and
-	collected payment for, so the resulting Sales Invoice is submitted
-	immediately.
+	collected payment for, so the resulting POS Invoice is submitted
+	immediately. Raw POS transactions are kept in the dedicated POS Invoice
+	doctype, separate from the Sales Invoices that represent actual billing
+	to a store (Store Fee Statement, Store Shipping Charge, Sales Order
+	material).
 
 	The Store must have a POS Profile configured (Store.pos_profile). The
 	underlying POS session (POS Opening Entry) that ERPNext requires is
 	managed automatically: reused if already open for today, or opened
-	(closing out any stale one from a previous day first) if not — callers
-	don't need to know Frappe's POS session mechanics.
+	(closing out any stale one from a previous day, or from a different
+	POS Profile under the same user, first) if not — callers don't need to
+	know Frappe's POS session mechanics.
 
 	Args:
 		store: name of a Store.
@@ -84,17 +88,17 @@ def create_pos_sale(store, items, payments, customer=None, posting_date=None, po
 			falling back to the POS Profile's default customer if the store
 			has none.
 		posting_date: optional; defaults to today.
-		pos_reference: optional external transaction id. If a Sales Invoice
+		pos_reference: optional external transaction id. If a POS Invoice
 			was already posted with this reference, that same invoice is
 			returned instead of creating a duplicate — makes retries safe.
 		Both `items` and `payments` accept JSON strings too (as REST calls
 		will send them).
 
 	Returns:
-		{"name": <Sales Invoice name>, "docstatus": int, "duplicate": bool}
+		{"name": <POS Invoice name>, "docstatus": int, "duplicate": bool}
 	"""
-	if not frappe.has_permission("Sales Invoice", "create"):
-		frappe.throw(_("Not permitted to create Sales Invoice"), frappe.PermissionError)
+	if not frappe.has_permission("POS Invoice", "create"):
+		frappe.throw(_("Not permitted to create POS Invoice"), frappe.PermissionError)
 
 	store_doc = frappe.db.get_value(
 		"Store", store, ["name", "company", "warehouse", "pos_profile", "partner"], as_dict=True
@@ -114,22 +118,23 @@ def create_pos_sale(store, items, payments, customer=None, posting_date=None, po
 		frappe.throw(_("At least one payment is required"))
 
 	if pos_reference:
-		existing = frappe.db.get_value("Sales Invoice", {"pos_reference": pos_reference}, "name")
+		existing = frappe.db.get_value("POS Invoice", {"pos_reference": pos_reference}, "name")
 		if existing:
 			return {
 				"name": existing,
-				"docstatus": frappe.db.get_value("Sales Invoice", existing, "docstatus"),
+				"docstatus": frappe.db.get_value("POS Invoice", existing, "docstatus"),
 				"duplicate": True,
 			}
 
 	from store_partnership.pos_session import get_or_open_pos_opening_entry
 
-	opening_entry = get_or_open_pos_opening_entry(store_doc.pos_profile, store_doc.company)
+	# Side effect only: makes sure an Open POS Opening Entry exists for this
+	# profile before submit — required by ERPNext, no link field to store it on.
+	get_or_open_pos_opening_entry(store_doc.pos_profile, store_doc.company)
 
-	si = frappe.new_doc("Sales Invoice")
+	si = frappe.new_doc("POS Invoice")
 	si.is_pos = 1
 	si.pos_profile = store_doc.pos_profile
-	si.pos_opening_entry = opening_entry
 	si.company = store_doc.company
 	# Bill the store's own partner/franchisee first, same as every other
 	# receivable in this app (Store Fee Statement, Store Shipping Charge,

@@ -24,10 +24,16 @@ def get_previous_month_period():
 
 
 def compute_total_sales(store, from_date, to_date):
-	"""Sum POS sales for a store in a period. Depending on site configuration,
-	POS transactions live in the `POS Invoice` doctype, or (when the site uses
-	"Sales Invoice for POS" mode) in `Sales Invoice` with is_pos=1 — a site only
-	ever uses one of the two, so summing both is safe and covers either mode."""
+	"""Sum POS sales for a store in a period, from two sources:
+	- `POS Invoice` (the current mode) — includes POS Invoices already merged
+	  by ERPNext's own POS consolidation job (status "Consolidated"); those
+	  still hold the original per-transaction grand_total, so they're the
+	  right place to count from.
+	- `Sales Invoice` with is_pos=1 — either legacy data from before this app
+	  switched to POS Invoice, or (going forward) the consolidated Sales
+	  Invoice a merge job creates *from* POS Invoices. The is_consolidated=1
+	  exclusion here is what stops that consolidated invoice from being
+	  double-counted on top of the POS Invoices it was built from."""
 	params = {"store": store, "from_date": from_date, "to_date": to_date}
 
 	pos_invoice_total = frappe.db.sql(
@@ -50,6 +56,7 @@ def compute_total_sales(store, from_date, to_date):
 			and is_pos = 1
 			and docstatus = 1
 			and is_return = 0
+			and ifnull(is_consolidated, 0) = 0
 			and posting_date between %(from_date)s and %(to_date)s
 		""",
 		params,

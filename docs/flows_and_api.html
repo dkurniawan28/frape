@@ -307,6 +307,7 @@
     <a href="#model-data">Model Data</a>
     <a href="#flow-pos">Transaksi POS</a>
     <a href="#flow-fee">Piutang Fee Bulanan</a>
+    <a href="#flow-onboarding">Onboarding &amp; Upgrade Fee</a>
     <a href="#flow-order">Order Material</a>
     <a href="#flow-ongkir">Ongkir Terpisah</a>
     <a href="#sesi-pos">Sesi POS (internal)</a>
@@ -329,7 +330,7 @@
     <section id="ringkasan">
       <div class="kicker">Bagaimana semua terhubung</div>
       <h2>Satu Store, tiga jalur invoice</h2>
-      <p class="lede">Semua flow berawal dari entitas <code>Store</code>. Dari satu store, ada tiga jalur transaksi yang masing-masing bermuara ke <strong>Sales Invoice terpisah</strong> — sengaja tidak pernah digabung, supaya piutang penjualan, fee kemitraan, dan ongkir masing-masing bisa ditagih dan direkonsiliasi sendiri-sendiri.</p>
+      <p class="lede">Semua flow berawal dari entitas <code>Store</code>. Dari satu store, ada tiga jalur transaksi yang masing-masing bermuara ke <strong>Sales Invoice terpisah</strong> — sengaja tidak pernah digabung, supaya piutang penjualan, fee kemitraan, dan ongkir masing-masing bisa ditagih dan direkonsiliasi sendiri-sendiri. Transaksi POS mentah sendiri sengaja dipisah lagi dari Sales Invoice — lihat Jalur 1.</p>
 
       <div class="lanes-wrap">
         <div class="lanes">
@@ -337,7 +338,7 @@
             <div class="lane-label">Jalur 1 — Penjualan POS</div>
             <div class="node hub"><span class="n-title">create_pos_sale API</span><span class="n-sub">atau input POS langsung</span></div>
             <div class="lane-arrow">↓</div>
-            <div class="node"><span class="n-title">Sales Invoice (is_pos=1)</span><span class="n-sub">field store terisi otomatis</span></div>
+            <div class="node"><span class="n-title">POS Invoice</span><span class="n-sub">operasional, field store terisi otomatis — terpisah dari Sales Invoice</span></div>
             <div class="lane-arrow">↓ akumulasi bulanan</div>
             <div class="node invoice fee"><span class="n-title">Store Fee Statement</span><span class="n-sub">→ Sales Invoice piutang fee</span></div>
           </div>
@@ -376,7 +377,9 @@
               <tr><td class="field-name">type_code</td><td class="field-type">Data</td><td class="field-note">Kode singkat, mis. <code>OWN</code>, <code>FRC</code>, <code>APL</code></td></tr>
               <tr><td class="field-name">operated_by</td><td class="field-type">Select</td><td class="field-note"><code>Company</code> / <code>Partner</code></td></tr>
               <tr><td class="field-name">settlement_model</td><td class="field-type">Select</td><td class="field-note"><code>None</code> / <code>Royalty</code> / <code>Profit Share</code></td></tr>
-              <tr><td class="field-name">fee_percentage</td><td class="field-type">Percent</td><td class="field-note">Wajib bila settlement_model ≠ None. Dipakai Store Fee Statement (§ Piutang Fee Bulanan).</td></tr>
+              <tr><td class="field-name">fee_percentage</td><td class="field-type">Percent</td><td class="field-note">Rate acuan/fallback — rate riil dari PKS Agreement aktif store itu (§ Piutang Fee Bulanan)</td></tr>
+              <tr><td class="field-name">onboarding_fee</td><td class="field-type">Currency</td><td class="field-note">Harga acuan onboarding fee (§ Onboarding &amp; Upgrade Fee)</td></tr>
+              <tr><td class="field-name">upgrade_fee</td><td class="field-type">Currency</td><td class="field-note">Harga acuan upgrade fee (§ Onboarding &amp; Upgrade Fee)</td></tr>
               <tr><td class="field-name">default_price_list</td><td class="field-type">Link → Price List</td><td class="field-note">Default untuk Sales Order store tipe ini</td></tr>
               <tr><td class="field-name">default_tax_rule</td><td class="field-type">Link → Tax Rule</td><td class="field-note">Resolve ke Sales Taxes and Charges Template</td></tr>
             </tbody>
@@ -409,6 +412,7 @@
               <tr><td class="field-name">store_fee_generation</td><td class="field-type">Manual</td><td class="field-note"><code>Manual</code> = klik "Generate Now". <code>Cron (Automatic Monthly)</code> = scheduler jalan otomatis tiap tanggal 1.</td></tr>
               <tr><td class="field-name">fee_item</td><td class="field-type">Store Fee</td><td class="field-note">Item baris Sales Invoice piutang fee</td></tr>
               <tr><td class="field-name">shipping_item</td><td class="field-type">Shipping Charge</td><td class="field-note">Item baris Sales Invoice ongkir</td></tr>
+              <tr><td class="field-name">onboarding_fee_item</td><td class="field-type">Franchise Onboarding Fee</td><td class="field-note">Item baris Sales Invoice onboarding/upgrade fee</td></tr>
               <tr><td class="field-name">last_generated_period</td><td class="field-type">—</td><td class="field-note">Read-only, diisi otomatis setelah generate</td></tr>
             </tbody>
           </table>
@@ -427,9 +431,33 @@
       <p><strong>Masalah awal</strong>: transaksi POS bisa dilihat di invoice tapi tidak bisa difilter per company/store.</p>
       <p><strong>Solusi</strong>: custom field <code>store</code> (Link → Store) ditambahkan ke <code>POS Invoice</code> (kalau site pakai doctype terpisah) dan <code>Sales Invoice</code> (kalau site pakai mode "Sales Invoice untuk POS", <code>is_pos=1</code>) — keduanya <code>in_list_view</code> dan <code>in_standard_filter</code>, otomatis jadi kolom &amp; filter standar sejajar dengan Company.</p>
       <p>Hook <code>validate</code> (<code>pos_invoice_store.set_store_from_warehouse</code>) mengisi <code>store</code> otomatis dari kombinasi <code>set_warehouse</code> + <code>company</code>, dicocokkan ke <code>Store.warehouse</code>. Tidak menimpa kalau sudah diisi manual.</p>
-      <div class="callout">
-        <div class="label">Konfirmasi lingkungan</div>
-        <p>Site ini terkonfirmasi pakai mode <strong>"Sales Invoice untuk POS"</strong>, bukan doctype <code>POS Invoice</code> terpisah. Semua perhitungan total penjualan di dokumen ini (§ Piutang Fee Bulanan, § API) menghitung dari kedua sumber sekaligus supaya tetap kompatibel kalau mode site berubah.</p>
+      <div class="callout good">
+        <div class="label">Update — sekarang pakai POS Invoice</div>
+        <p>Site sekarang dikonfigurasi <code>POS Settings.invoice_type = "POS Invoice"</code> (patch <code>switch_pos_invoice_type</code>) — transaksi POS baru masuk ke doctype <strong>POS Invoice</strong> yang terpisah dari <code>Sales Invoice</code>, supaya operasional POS (tinggi-frekuensi) tidak campur dengan dokumen billing "resmi" ke store (Store Fee Statement, Store Shipping Charge, Sales Order material). Data lama di mode <code>is_pos=1</code> Sales Invoice tetap ada, tidak dimigrasikan. Semua perhitungan total penjualan (§ Piutang Fee Bulanan, § API) tetap menghitung dari kedua sumber sekaligus untuk kompatibilitas histori.</p>
+        <p><strong>Efek samping</strong>: <code>POS Invoice</code> memvalidasi ketersediaan stok lebih ketat daripada mode lama — item stock yang stoknya 0 di warehouse store akan ditolak saat submit.</p>
+      </div>
+
+      <h3>Filter <code>store</code> berdasarkan <code>customer</code></h3>
+      <p>Satu partner bisa punya lebih dari satu store (mis. PT Abadi Jaya Makmur punya Toko Bekasi <em>dan</em> Toko Bandung). Begitu field <code>customer</code> diisi di <code>Sales Order</code>, <code>Sales Invoice</code>, atau <code>POS Invoice</code>, opsi link <code>store</code> otomatis dipersempit ke store-store milik customer itu saja — melengkapi (bukan menggantikan) auto-fill store→customer yang sudah ada di Sales Order.</p>
+      <p class="wide">Diimplementasikan sebagai <strong>Client Script</strong> (<code>store_partnership.client_scripts</code>), bukan file <code>.js</code> statis — environment ini tidak punya Node.js untuk <code>bench build</code>, jadi Client Script (disimpan &amp; dieksekusi dari database, di-sync lewat patch seperti custom field lain) adalah jalur yang tidak butuh build sama sekali.</p>
+
+      <h3>Arti field <code>status</code> di POS Invoice</h3>
+      <p>Read-only, dihitung otomatis oleh ERPNext (<code>set_status()</code>), bukan field yang diisi manual.</p>
+      <div class="table-scroll">
+        <table class="spec">
+          <thead><tr><th>Status</th><th>Artinya</th></tr></thead>
+          <tbody>
+            <tr><td class="field-name">Draft</td><td>Belum submit (<code>docstatus=0</code>).</td></tr>
+            <tr><td class="field-name">Submitted</td><td>Sudah submit, tidak masuk kategori lain di bawah (jarang muncul).</td></tr>
+            <tr><td class="field-name">Unpaid / Overdue</td><td>Masih ada <code>outstanding_amount</code>; Overdue kalau sudah lewat <code>due_date</code>.</td></tr>
+            <tr><td class="field-name">Partly Paid</td><td>Dibayar sebagian.</td></tr>
+            <tr><td class="field-name">Paid</td><td><code>outstanding_amount = 0</code>, lunas penuh, belum ikut konsolidasi.</td></tr>
+            <tr><td class="field-name">Return</td><td><code>is_return=1</code> — nota retur.</td></tr>
+            <tr><td class="field-name">Credit Note Issued</td><td>Invoice asli yang sudah ada retur terhadapnya.</td></tr>
+            <tr><td class="field-name">Consolidated</td><td><strong>Sudah digabung</strong> ke sebuah Sales Invoice oleh job konsolidasi POS bawaan ERPNext — lihat catatan penting di § Piutang Fee Bulanan.</td></tr>
+            <tr><td class="field-name">Cancelled</td><td><code>docstatus=2</code>.</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -444,9 +472,14 @@
       <h3>Alur generate</h3>
       <ol class="steps">
         <li><strong>Cek duplikat.</strong><p>Skip kalau sudah ada Store Fee Statement untuk store + periode yang sama — proses ini idempotent, aman dipanggil berulang.</p></li>
-        <li><strong>Hitung (<code>calculate_statement</code>).</strong><p><code>total_sales</code> = SUM(grand_total) dari POS Invoice + Sales Invoice (is_pos=1), submitted &amp; bukan return, untuk store &amp; periode itu. <code>fee_percentage</code> = rate dari PKS Agreement aktif store itu (<code>royalty_percent</code>/<code>profit_share_percent</code> sesuai <code>settlement_model</code>), fallback ke <code>Store Type.fee_percentage</code> kalau tidak ada PKS aktif. <code>fee_amount</code> = total_sales × fee_percentage / 100. Status → <span class="status calc">● Calculated</span>.</p></li>
+        <li><strong>Hitung (<code>calculate_statement</code>).</strong><p><code>total_sales</code> = SUM(grand_total) dari POS Invoice + Sales Invoice (is_pos=1, <strong>is_consolidated=0</strong>), submitted &amp; bukan return, untuk store &amp; periode itu. <code>fee_percentage</code> = rate dari PKS Agreement aktif store itu (<code>royalty_percent</code>/<code>profit_share_percent</code> sesuai <code>settlement_model</code>), fallback ke <code>Store Type.fee_percentage</code> kalau tidak ada PKS aktif. <code>fee_amount</code> = total_sales × fee_percentage / 100. Status → <span class="status calc">● Calculated</span>.</p></li>
         <li><strong>Tagih (kalau fee_amount &gt; 0).</strong><p>Buat Sales Invoice baru ke <code>Store.partner</code>, 1 baris item (<code>fee_item</code>), langsung insert + submit. Status → <span class="status done">● Invoiced</span>, field <code>sales_invoice</code> terisi.</p></li>
       </ol>
+
+      <div class="callout good">
+        <div class="label">Bug ditemukan &amp; diperbaiki — double counting dari konsolidasi POS</div>
+        <p>ERPNext punya job bawaan yang otomatis menggabung beberapa <code>POS Invoice</code> jadi satu <code>Sales Invoice</code> (<code>is_pos=1</code>, <code>is_consolidated=1</code>) — invoice hasil gabungan ini isinya total yang <strong>sama persis</strong> dengan POS Invoice komponennya. Ditemukan setelah insert dummy data lewat <code>create_pos_sale</code>: 9 dari 10 POS Invoice otomatis ter-konsolidasi. Tanpa exclude <code>is_consolidated=1</code>, <code>compute_total_sales()</code> menjumlah dari kedua sisi dan menghitung penjualan yang sama dua kali — store bisa ditagih fee dua kali lipat. Diverifikasi: Kemang seharusnya Rp 895.000 (515rb dari POS Invoice + 380rb data lama), bukan Rp 1.410.000 kalau konsolidasi ikut kehitung.</p>
+      </div>
 
       <h3>Cara trigger</h3>
       <table class="trigger-table">
@@ -460,6 +493,66 @@
 
       <h3>Status</h3>
       <p><span class="status draft">● Draft</span> baru dibuat → <span class="status calc">● Calculated</span> sudah dihitung, belum ditagih → <span class="status done">● Invoiced</span> Sales Invoice sudah submit, tidak bisa diubah lagi.</p>
+    </section>
+
+    <section id="flow-onboarding">
+      <div class="kicker">Sekali bayar per store — bukan recurring</div>
+      <h2>Onboarding &amp; Upgrade Fee (<code>Store Onboarding Fee</code>)</h2>
+      <p>Dua kejadian yang kena biaya: <strong>Onboarding</strong> (store baru, PKS Agreement pertama untuk store itu) dan <strong>Upgrade</strong> (store existing pindah tipe, mis. Franchise → Autopilot, PKS baru dengan <code>store_type</code> beda dari PKS aktif sebelumnya). Perpanjangan/renegosiasi PKS dengan Store Type <strong>sama</strong> bukan keduanya — tidak ada fee.</p>
+
+      <h3>Base price vs nominal final (proses penawaran)</h3>
+      <p><code>Store Type.onboarding_fee</code> / <code>upgrade_fee</code> cuma harga acuan/starting point, bukan angka yang dipaksakan. Nominal final selalu diisi manual di <code>PKS Agreement.fee_amount</code> — hasil negosiasi, bisa beda dari acuan.</p>
+      <p class="wide">Kalau penawarannya formal/tertulis, pakai fitur bawaan ERPNext <strong>Quotation</strong> (module Selling) untuk kirim penawaran resmi ke calon partner sebelum PKS Agreement dibuat — tidak perlu integrasi khusus, item "Onboarding Fee" tinggal dipakai di baris Quotation dengan harga awal dari Store Type, lalu diedit sesuai hasil nego. <code>PKS Agreement.fee_amount</code> tetap diisi manual dengan angka final (belum ada link otomatis Quotation → PKS Agreement).</p>
+
+      <h3>Trigger &amp; alur otomatis</h3>
+      <p>Hook <code>on_submit</code> di <code>pks_agreement.py</code>, jalan begitu PKS Agreement disubmit, setelah <code>sync_store()</code>:</p>
+      <ol class="steps">
+        <li><strong>Cari PKS Agreement lain</strong> yang submitted untuk store yang sama.</li>
+        <li><strong>Tidak ada sama sekali</strong> → <code>fee_type = "Onboarding"</code>.</li>
+        <li><strong>Ada, tapi store_type beda</strong> dari PKS ini → <code>fee_type = "Upgrade"</code>.</li>
+        <li><strong>Ada, store_type sama</strong> → berhenti, tidak ada fee.</li>
+        <li><strong>fee_amount kosong/0</strong> → berhenti juga (dianggap sengaja di-waive).</li>
+        <li><strong>Idempotency check</strong> — kalau sudah ada Store Onboarding Fee untuk PKS ini, skip.</li>
+        <li><strong>Buat Store Onboarding Fee baru (Draft)</strong> — store, pks_agreement, fee_type, amount (disalin dari PKS Agreement.fee_amount), customer/company auto-isi dari Store saat validate.</li>
+      </ol>
+
+      <h3>Cara pakai (panduan staf)</h3>
+      <p><strong>Setup awal, sekali saja per Store Type</strong> (opsional): buka <strong>Store Type</strong> → isi <strong>Onboarding Fee (Acuan)</strong> &amp; <strong>Upgrade Fee (Acuan)</strong> → Save. Kalau mau item Sales Invoice-nya beda, ganti <strong>Onboarding Fee Item</strong> di Store Partnership Settings.</p>
+      <ol class="steps">
+        <li><strong>Onboard store baru.</strong><p>Buat Store baru → buat PKS Agreement (cek harga acuan Store Type sebagai starting point nego, atau pakai Quotation ERPNext dulu kalau ada penawaran formal) → isi <strong>Onboarding/Upgrade Fee (Nominal Final)</strong> dengan hasil negosiasi → <strong>Submit</strong> PKS Agreement → buka menu Store Onboarding Fee, muncul record Draft baru (fee_type Onboarding) → cek nominal, klik <strong>"Create Sales Invoice"</strong>.</p></li>
+        <li><strong>Upgrade store existing</strong> (mis. Franchise → Autopilot).<p>Langkah sama, bedanya: ubah dulu <code>Store.store_type</code> ke tipe baru → Save → baru buat &amp; submit PKS Agreement baru dengan fee_amount sesuai upgrade → Store Onboarding Fee muncul dengan fee_type Upgrade, PKS lama otomatis Expired → cek &amp; "Create Sales Invoice" seperti biasa.</p></li>
+        <li><strong>Perpanjangan PKS biasa</strong> (Store Type tidak berubah).<p>Tidak ada langkah tambahan — submit seperti biasa, tidak akan muncul Store Onboarding Fee sama sekali.</p></li>
+      </ol>
+
+      <div class="spec-card">
+        <div class="spec-head"><span class="doctype-name">Store Onboarding Fee</span><span class="doctype-flag">Draft → Invoiced</span></div>
+        <div class="table-scroll">
+          <table class="spec">
+            <thead><tr><th>Field</th><th>Tipe</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td class="field-name">store, pks_agreement</td><td class="field-type">read-only</td><td class="field-note">Terisi otomatis dari trigger di atas</td></tr>
+              <tr><td class="field-name">fee_type</td><td class="field-type">Select</td><td class="field-note">Onboarding / Upgrade, read-only</td></tr>
+              <tr><td class="field-name">customer, company</td><td class="field-type">read-only</td><td class="field-note">Auto-isi dari Store</td></tr>
+              <tr><td class="field-name">amount</td><td class="field-type">Currency</td><td class="field-note">Nominal yang ditagihkan</td></tr>
+              <tr><td class="field-name">sales_invoice</td><td class="field-type">read-only</td><td class="field-note">Terisi setelah invoice dibuat</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="wide">Tombol <strong>"Create Sales Invoice"</strong> → Sales Invoice baru &amp; terpisah ke <code>Store.partner</code>, 1 baris item (<code>onboarding_fee_item</code>), insert + <strong>langsung submit</strong>. Berdiri sendiri seperti Store Fee Statement dan Store Shipping Charge — tidak pernah digabung dengan invoice lain.</p>
+
+      <div class="callout good">
+        <div class="label">Diverifikasi 3 skenario</div>
+        <p><strong>Onboarding</strong> (PKS pertama → fee tercatat), <strong>Upgrade</strong> (ganti Store Type → fee tercatat, PKS lama otomatis Expired seperti biasa), dan <strong>Renewal</strong> (Store Type sama → tidak ada Store Onboarding Fee yang terbentuk sama sekali).</p>
+      </div>
+
+      <h3>Takeover jadi Store <code>OWN</code> — bukan flow baru</h3>
+      <p>Kejadian mirip tapi arah pembayarannya kebalikan (company bayar ke partner, bukan sebaliknya) — sengaja <strong>tidak</strong> dibuatkan mekanisme custom, base price juga sengaja tidak dipatok (nominal buyout terlalu variatif). Cukup 3 langkah manual pakai fitur ERPNext bawaan:</p>
+      <ol class="steps">
+        <li><strong>Payment Entry</strong> — Payment Type "Pay", Party Type "Customer", Party = partner store itu, nominal = hasil negosiasi buyout. Fitur bawaan ERPNext untuk bayar keluar ke Customer, tidak butuh Supplier/Purchase Invoice.</li>
+        <li><strong>Cancel PKS Agreement</strong> aktif store itu — <code>on_cancel()</code> otomatis Terminated + mengosongkan <code>Store.active_pks</code>.</li>
+        <li><strong>Edit Store</strong> manual: <code>store_type</code> → OWN, <code>partner</code> → dikosongkan.</li>
+      </ol>
     </section>
 
     <section id="flow-order">
@@ -508,12 +601,13 @@
     <section id="sesi-pos">
       <div class="kicker">Internal · dipakai oleh API §7.2</div>
       <h2>Manajemen sesi POS</h2>
-      <p>ERPNext mewajibkan setiap Sales Invoice dengan <code>is_pos=1</code> terkait ke <strong>POS Opening Entry</strong> yang berstatus <code>Open</code> dan tanggalnya hari ini — hanya boleh ada satu per POS Profile. Modul <code>pos_session.get_or_open_pos_opening_entry()</code> menangani ini otomatis, caller (API §7.2) tidak perlu tahu mekanismenya.</p>
+      <p>ERPNext mewajibkan setiap POS Invoice (atau Sales Invoice lama dengan <code>is_pos=1</code>) terkait ke <strong>POS Opening Entry</strong> yang berstatus <code>Open</code> dan tanggalnya hari ini — hanya boleh ada satu per POS Profile, <strong>dan hanya boleh ada satu per user lintas semua POS Profile</strong> (batasan bawaan ERPNext sendiri). Modul <code>pos_session.get_or_open_pos_opening_entry()</code> menangani semuanya otomatis, caller (API §7.2) tidak perlu tahu mekanismenya.</p>
       <ol class="steps">
         <li><strong>Cari sesi yang open</strong> untuk POS Profile tsb.</li>
         <li><strong>Kalau ada &amp; tanggalnya hari ini</strong> → dipakai langsung.</li>
         <li><strong>Kalau ada tapi tanggalnya kemarin</strong> (sesi lupa ditutup) → otomatis ditutup dulu pakai <code>make_closing_entry_from_opening()</code> bawaan ERPNext (hitung ulang dari invoice-invoice yang masuk di sesi itu), baru buka sesi baru untuk hari ini.</li>
         <li><strong>Kalau ada lebih dari satu yang open</strong> (kondisi tak terduga) → berhenti dengan error jelas, minta admin selesaikan manual di Desk. Sengaja tidak auto-close banyak sekaligus tanpa pengawasan.</li>
+        <li><strong>Tutup sesi <em>open</em> lain milik user yang sama di POS Profile berbeda</strong> (<code>_close_other_profile_sessions_for_user</code>) — ditemukan saat testing multi-store: satu API user melayani store berbeda di hari yang sama kena error ERPNext <code>"Cashier is currently assigned to another POS."</code> kalau ini tidak ditangani.</li>
         <li><strong>Kalau tidak ada sama sekali</strong> → buka baru, <code>opening_amount=0</code> untuk tiap payment method di POS Profile itu.</li>
       </ol>
     </section>
@@ -527,7 +621,7 @@ Authorization: token &lt;api_key&gt;:&lt;api_secret&gt;
 Content-Type: application/json</pre></div>
       <p>API key/secret dibuat per User lewat Desk (<strong>User</strong> → <strong>API Access</strong> → <strong>Generate Keys</strong>). Permission mengikuti role user tsb.</p>
 
-      <h3 id="api-order">7.1 · create_store_sales_order</h3>
+      <h3 id="api-order">8.1 · create_store_sales_order</h3>
       <p>Order material dari store ke company. Ditinggalkan sebagai <span class="status draft">● Draft</span> secara default supaya staf sempat review — tidak otomatis "selesai" begitu API dipanggil.</p>
       <div class="endpoint"><span class="verb">POST</span>store_partnership.api.create_store_sales_order</div>
       <table class="param-table">
@@ -556,8 +650,8 @@ Content-Type: application/json</pre></div>
         <div class="err-item"><code>Source warehouse required for stock item ...</code><span>Item stock tapi <code>warehouse</code> tidak dikirim &amp; tidak ada default lain (dari ERPNext sendiri).</span></div>
       </div>
 
-      <h3 id="api-pos">7.2 · create_pos_sale</h3>
-      <p>Posting transaksi POS yang <strong>sudah closed/paid</strong> di sistem POS store, langsung jadi Sales Invoice <span class="status done">● submitted</span> — bukan draft, karena transaksi dianggap sudah final &amp; terbayar.</p>
+      <h3 id="api-pos">8.2 · create_pos_sale</h3>
+      <p>Posting transaksi POS yang <strong>sudah closed/paid</strong> di sistem POS store, langsung jadi <strong>POS Invoice</strong> <span class="status done">● submitted</span> — bukan draft, karena transaksi dianggap sudah final &amp; terbayar.</p>
       <div class="endpoint"><span class="verb">POST</span>store_partnership.api.create_pos_sale</div>
       <table class="param-table">
         <thead><tr><th>Parameter</th><th>Wajib</th><th>Keterangan</th></tr></thead>
@@ -570,7 +664,7 @@ Content-Type: application/json</pre></div>
           <tr><td class="pname">pos_reference</td><td class="preq req-no">Sangat disarankan</td><td>ID transaksi dari POS eksternal. Kalau sudah pernah dipakai, balikin invoice yang sama (<code>duplicate: true</code>) — bukan buat baru.</td></tr>
         </tbody>
       </table>
-      <p><strong>Return</strong>: <code>{"name": "ACC-SINV-2026-00025", "docstatus": 1, "duplicate": false}</code></p>
+      <p><strong>Return</strong>: <code>{"name": "ACC-PSINV-2026-00001", "docstatus": 1, "duplicate": false}</code> (naming series <code>POS Invoice</code>, biasanya prefix <code>ACC-PSINV-</code>).</p>
       <div class="code-wrap"><pre class="code"><span class="kw">curl</span> -X POST https://&lt;site&gt;/api/method/store_partnership.api.create_pos_sale \
   -H <span class="str">"Authorization: token &lt;api_key&gt;:&lt;api_secret&gt;"</span> \
   -H <span class="str">"Content-Type: application/json"</span> \
@@ -585,10 +679,12 @@ Content-Type: application/json</pre></div>
         <div class="err-item"><code>Store {0} has no POS Profile configured.</code><span>Isi dulu <code>Store.pos_profile</code>.</span></div>
         <div class="err-item"><code>At least one payment is required</code><span><code>payments</code> kosong.</span></div>
         <div class="err-item"><code>POS Profile {0} has multiple open POS Opening Entries...</code><span>Kondisi tak terduga (§ Sesi POS langkah 4), butuh penyelesaian manual sekali di Desk.</span></div>
+        <div class="err-item"><code>Item {0} has no stock in warehouse {1}</code><span>POS Invoice memvalidasi stok lebih ketat dari mode is_pos lama — item stock butuh saldo cukup di <code>Store.warehouse</code>.</span></div>
       </div>
       <div class="callout warn">
         <div class="label">Penting — idempotency</div>
-        <p>Selalu kirim <code>pos_reference</code> unik per transaksi dari sisi POS store. Tanpa ini, retry otomatis dari sistem POS (krn timeout dsb) akan membuat Sales Invoice dobel untuk penjualan yang sama.</p>
+        <p>Selalu kirim <code>pos_reference</code> unik per transaksi dari sisi POS store. Tanpa ini, retry otomatis dari sistem POS (krn timeout dsb) akan membuat POS Invoice dobel untuk penjualan yang sama.</p>
+        <p>Dedup hanya cek apakah <code>pos_reference</code> sudah ada, tanpa peduli statusnya — kalau attempt pertama gagal submit di tengah jalan (mis. kena error stok) dan sempat ter-insert sebagai Draft, retry berikutnya dianggap "duplicate" dan mengembalikan Draft yang gagal itu apa adanya, bukan otomatis diperbaiki.</p>
       </div>
     </section>
 
@@ -600,10 +696,16 @@ Content-Type: application/json</pre></div>
           <thead><tr><th>Doctype</th><th>Field</th><th>Tipe</th><th>Catatan</th></tr></thead>
           <tbody>
             <tr><td class="field-name">Store Type</td><td class="field-name">fee_percentage</td><td class="field-type">Percent</td><td class="field-note">Native field</td></tr>
+            <tr><td class="field-name">Store Type</td><td class="field-name">onboarding_fee</td><td class="field-type">Currency</td><td class="field-note">Native field, harga acuan onboarding</td></tr>
+            <tr><td class="field-name">Store Type</td><td class="field-name">upgrade_fee</td><td class="field-type">Currency</td><td class="field-note">Native field, harga acuan upgrade</td></tr>
             <tr><td class="field-name">Store</td><td class="field-name">pos_profile</td><td class="field-type">Link POS Profile</td><td class="field-note">Native field</td></tr>
+            <tr><td class="field-name">PKS Agreement</td><td class="field-name">fee_amount</td><td class="field-type">Currency</td><td class="field-note">Native field, nominal final onboarding/upgrade fee</td></tr>
+            <tr><td class="field-name">Store Partnership Settings</td><td class="field-name">onboarding_fee_item</td><td class="field-type">Link Item</td><td class="field-note">Native field, default "Franchise Onboarding Fee"</td></tr>
+            <tr><td class="field-name">Store Onboarding Fee</td><td class="field-name">(semua field)</td><td class="field-type">—</td><td class="field-note">Doctype baru, lihat § Onboarding &amp; Upgrade Fee</td></tr>
             <tr><td class="field-name">POS Invoice</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field</td></tr>
-            <tr><td class="field-name">Sales Invoice</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field, <code>depends_on: is_pos</code></td></tr>
-            <tr><td class="field-name">Sales Invoice</td><td class="field-name">pos_reference</td><td class="field-type">Data</td><td class="field-note">Custom Field, idempotency §7.2</td></tr>
+            <tr><td class="field-name">POS Invoice</td><td class="field-name">pos_reference</td><td class="field-type">Data</td><td class="field-note">Custom Field, idempotency §8.2</td></tr>
+            <tr><td class="field-name">Sales Invoice</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field, <code>depends_on: is_pos</code> — legacy, dari mode sebelum switch ke POS Invoice</td></tr>
+            <tr><td class="field-name">Sales Invoice</td><td class="field-name">pos_reference</td><td class="field-type">Data</td><td class="field-note">Custom Field, idem — legacy</td></tr>
             <tr><td class="field-name">Sales Order</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field</td></tr>
             <tr><td class="field-name">Sales Order</td><td class="field-name">shipping_amount</td><td class="field-type">Currency</td><td class="field-note">Custom Field, lihat Jalur 2</td></tr>
             <tr><td class="field-name">Sales Order</td><td class="field-name">shipping_description</td><td class="field-type">Small Text</td><td class="field-note">Custom Field, lihat Jalur 2</td></tr>
@@ -621,7 +723,8 @@ Content-Type: application/json</pre></div>
         <div class="oq-item done"><span class="oq-mark done">✓</span><p><strong>Fee percentage per-store vs per-Store-Type.</strong> Sudah diperbaiki — Store Fee Statement sekarang baca dari PKS Agreement aktif milik store itu (<code>Store.active_pks</code>), fallback ke Store Type kalau belum ada PKS.</p></div>
         <div class="oq-item"><span class="oq-mark">!</span><p><strong>create_store_sales_order belum validasi stok</strong> saat insert — memang perilaku standar ERPNext, baru dicek saat Delivery Note.</p></div>
         <div class="oq-item"><span class="oq-mark">!</span><p><strong>Belum ada Customer Portal / self-service</strong> untuk partner store order sendiri dari luar. API saat ini untuk dipanggil sistem eksternal (POS/ordering app milik store), bukan diakses langsung end-user.</p></div>
-        <div class="oq-item"><span class="oq-mark">!</span><p><strong>create_pos_sale belum menangani retur/void.</strong> Kalau transaksi dibatalkan di sisi store setelah ter-post, pembatalannya perlu ditangani manual (cancel Sales Invoice) atau butuh endpoint tambahan <code>create_pos_return</code>.</p></div>
+        <div class="oq-item"><span class="oq-mark">!</span><p><strong>create_pos_sale belum menangani retur/void.</strong> Kalau transaksi dibatalkan di sisi store setelah ter-post, pembatalannya perlu ditangani manual (cancel POS Invoice) atau butuh endpoint tambahan <code>create_pos_return</code>.</p></div>
+        <div class="oq-item"><span class="oq-mark">!</span><p><strong>Retry setelah gagal submit bisa nyangkut sebagai Draft.</strong> Dedup <code>pos_reference</code> tidak membedakan Draft vs Submitted — POS Invoice yang gagal submit (mis. kena validasi stok) terus dikembalikan apa adanya oleh retry berikutnya, bukan diperbaiki otomatis.</p></div>
       </div>
     </section>
 

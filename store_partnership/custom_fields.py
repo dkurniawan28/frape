@@ -54,6 +54,16 @@ custom_fields = {
 			in_standard_filter=1,
 			allow_on_submit=1,
 		),
+		dict(
+			fieldname="pos_reference",
+			label="POS Reference",
+			fieldtype="Data",
+			insert_after="store",
+			in_standard_filter=1,
+			allow_on_submit=1,
+			read_only=1,
+			description="External transaction id from the store's own POS system, used to make repeated API calls idempotent.",
+		),
 	],
 	"Sales Invoice": [
 		dict(
