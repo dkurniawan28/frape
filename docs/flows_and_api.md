@@ -158,32 +158,61 @@ manual):
 - `selling_price_list` ← `Store Type.default_price_list` (kalau ada)
 - `taxes_and_charges` ← resolve dari `Store Type.default_tax_rule` → `Tax Rule.sales_tax_template`
 
-Setelah itu alur normal ERPNext: Sales Order → Delivery Note → Sales Invoice (piutang
-material, terpisah dari piutang fee di §3 dan ongkir di §5).
+### 4.2 Field ongkir di Sales Order & auto-invoice saat Submit
+
+Section "Ongkir (Invoice Terpisah)" di Sales Order (di bawah field `store`):
+
+| Field | Keterangan |
+|---|---|
+| `shipping_amount` | Currency, opsional. Diisi kalau order ini kena biaya kirim ke store |
+| `shipping_description` | Catatan ongkir, opsional |
+| `store_shipping_charge` | Read-only, terisi otomatis setelah SO submit (link ke §5) |
+
+Hook `on_submit` (`store_partnership.sales_order_store.create_invoices_on_submit`) —
+begitu staf men-submit Sales Order (`store` terisi), otomatis membuat **dua Sales Invoice
+terpisah sebagai Draft** (tidak langsung ke-submit — staf tetap harus cek & submit manual
+dari masing-masing invoice sebelum masuk piutang):
+
+1. **Invoice material** — dari item-item SO, lewat `make_sales_invoice()` bawaan ERPNext
+   (sama seperti tombol "Create > Sales Invoice" manual), `insert()` sebagai Draft.
+2. **Invoice ongkir** — hanya kalau `shipping_amount` diisi. Otomatis membuat record
+   `Store Shipping Charge` baru (lihat §5) yang ter-link ke SO ini (`sales_order`), lalu
+   membuat Sales Invoice-nya sebagai Draft juga (lewat
+   `create_sales_invoice_for_shipping_charge(doc, submit=False)`). Nama `Store Shipping
+   Charge` yang terbentuk disimpan balik ke field `store_shipping_charge` di SO.
+
+Hasilnya: **1 Sales Order material submit → langsung ada 2 invoice Draft** — 1 untuk
+barang, 1 untuk ongkir (kalau diisi) — tidak pernah digabung jadi satu invoice. Staf
+tinggal buka masing-masing invoice dari Connections/`store_shipping_charge` dan submit
+kalau sudah oke.
+
+Kalau `shipping_amount` kosong saat submit, hanya invoice material yang dibuat (tidak ada
+`Store Shipping Charge` yang terbentuk).
 
 ---
 
 ## 5. Flow: Ongkir (`Store Shipping Charge`)
 
-Biaya kirim diinput manual dan ditagihkan **terpisah** dari invoice material.
+Selain otomatis terbentuk dari Sales Order (§4.2), `Store Shipping Charge` juga bisa
+diinput manual langsung (misal ongkir susulan yang tidak terkait Sales Order tertentu).
 
 | Field | Keterangan |
 |---|---|
 | `store` | Wajib |
-| `sales_order` | Opsional, referensi ke Sales Order material terkait (§4) |
+| `sales_order` | Opsional, referensi ke Sales Order material terkait (§4) — terisi otomatis kalau dibuat dari alur §4.2 |
 | `customer`, `company` | Read-only, auto-isi dari `Store.partner` / `Store.company` saat `validate` |
 | `amount` | Input manual biaya kirim |
 | `description` | Opsional |
-| `status` | `Draft` → `Invoiced` |
-| `sales_invoice` | Read-only, terisi setelah "Create Sales Invoice" |
+| `status` | `Draft` → `Invoiced` (berarti Sales Invoice sudah *dibuat*, belum tentu sudah *submit*) |
+| `sales_invoice` | Read-only, terisi setelah invoice dibuat |
 
-Tombol **"Create Sales Invoice"** di form-nya → `store_shipping.create_sales_invoice_for_shipping_charge()`
-→ Sales Invoice **baru dan terpisah** ke `Customer` = `Store.partner`, 1 baris item
-(`Store Partnership Settings.shipping_item`), insert + submit.
+Tombol **"Create Sales Invoice"** di form-nya (dipakai untuk entri manual) →
+`store_shipping.create_sales_invoice_for_shipping_charge(doc, submit=True)` → Sales
+Invoice **baru dan terpisah** ke `Customer` = `Store.partner`, 1 baris item
+(`Store Partnership Settings.shipping_item`), insert + **langsung submit**.
 
-Hasilnya: **1 Sales Order material bisa punya 2 invoice berbeda** — 1 untuk barang (dari
-Sales Order → Sales Invoice normal), 1 untuk ongkir (dari Store Shipping Charge). Tidak
-pernah digabung jadi satu invoice.
+Untuk yang dibuat otomatis dari SO (§4.2), fungsi yang sama dipanggil dengan
+`submit=False` — jadi Sales Invoice-nya **tetap Draft** sampai staf submit manual.
 
 ---
 
@@ -328,6 +357,9 @@ POS store (mis. ID transaksi internal mereka). Tanpa ini, retry otomatis dari si
 | Sales Invoice | `store` | Link Store | Custom Field, `depends_on: is_pos` |
 | Sales Invoice | `pos_reference` | Data | Custom Field, untuk idempotency §7.2 |
 | Sales Order | `store` | Link Store | Custom Field |
+| Sales Order | `shipping_amount` | Currency | Custom Field, lihat §4.2 |
+| Sales Order | `shipping_description` | Small Text | Custom Field, lihat §4.2 |
+| Sales Order | `store_shipping_charge` | Link Store Shipping Charge | Custom Field, read-only, auto-isi saat submit §4.2 |
 
 Semua Custom Field disinkronkan lewat patch (`bench migrate`), didefinisikan terpusat di
 `store_partnership/custom_fields.py`.

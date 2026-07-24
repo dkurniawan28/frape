@@ -9,6 +9,39 @@ custom_fields = {
 			in_list_view=1,
 			in_standard_filter=1,
 		),
+		dict(
+			fieldname="shipping_section",
+			label="Ongkir (Invoice Terpisah)",
+			fieldtype="Section Break",
+			insert_after="store",
+			collapsible=0,
+		),
+		dict(
+			fieldname="shipping_amount",
+			label="Biaya Ongkir",
+			fieldtype="Currency",
+			insert_after="shipping_section",
+			description="Diisi jika order ini kena biaya kirim ke store. Saat Sales Order di-submit, otomatis dibuatkan Sales Invoice terpisah (Draft) untuk ongkir ini, terpisah dari invoice material.",
+		),
+		dict(
+			fieldname="shipping_column_break",
+			fieldtype="Column Break",
+			insert_after="shipping_amount",
+		),
+		dict(
+			fieldname="shipping_description",
+			label="Catatan Ongkir",
+			fieldtype="Small Text",
+			insert_after="shipping_column_break",
+		),
+		dict(
+			fieldname="store_shipping_charge",
+			label="Store Shipping Charge",
+			fieldtype="Link",
+			options="Store Shipping Charge",
+			insert_after="shipping_description",
+			read_only=1,
+		),
 	],
 	"POS Invoice": [
 		dict(

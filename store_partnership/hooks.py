@@ -147,6 +147,7 @@ doc_events = {
 	},
 	"Sales Order": {
 		"validate": "store_partnership.sales_order_store.apply_store_defaults",
+		"on_submit": "store_partnership.sales_order_store.create_invoices_on_submit",
 	},
 }
 

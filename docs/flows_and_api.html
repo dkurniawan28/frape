@@ -467,13 +467,21 @@
         <li><code>selling_price_list</code> ← <code>Store Type.default_price_list</code></li>
         <li><code>taxes_and_charges</code> ← resolve dari <code>Store Type.default_tax_rule</code> → <code>Tax Rule.sales_tax_template</code></li>
       </ul>
-      <p>Setelah itu alur normal ERPNext: Sales Order → Delivery Note → Sales Invoice (piutang material, terpisah dari fee &amp; ongkir).</p>
+      <h3>Ongkir di Sales Order + auto-invoice saat Submit</h3>
+      <p>Section "Ongkir (Invoice Terpisah)" di form Sales Order, di bawah field <code>store</code>: <code>shipping_amount</code> (Currency, opsional), <code>shipping_description</code> (opsional), dan <code>store_shipping_charge</code> (read-only, terisi otomatis setelah submit).</p>
+      <ol class="steps">
+        <li><strong>Staf submit Sales Order</strong> (<code>store</code> terisi).</li>
+        <li><strong>Invoice material dibuat otomatis.</strong><p>Lewat <code>make_sales_invoice()</code> bawaan ERPNext (sama seperti tombol "Create &gt; Sales Invoice" manual) — <code>insert()</code> sebagai <span class="status draft">● Draft</span>, <strong>tidak langsung submit</strong>.</p></li>
+        <li><strong>Invoice ongkir dibuat otomatis (kalau <code>shipping_amount</code> diisi).</strong><p>Sistem membuat record <code>Store Shipping Charge</code> baru ter-link ke Sales Order ini, lalu Sales Invoice-nya juga sebagai <span class="status draft">● Draft</span> (lihat §Jalur 3 di bawah). Nama <code>Store Shipping Charge</code> yang terbentuk disimpan balik ke field <code>store_shipping_charge</code> di Sales Order.</p></li>
+        <li><strong>Staf review &amp; submit manual</strong> dari masing-masing invoice sebelum masuk piutang store.</li>
+      </ol>
+      <p class="wide">Hasilnya: <strong>1 Sales Order submit → langsung ada 2 invoice Draft</strong> — barang dan ongkir tidak pernah digabung jadi satu invoice. Kalau <code>shipping_amount</code> kosong, hanya invoice material yang dibuat.</p>
     </section>
 
     <section id="flow-ongkir">
       <div class="kicker">Jalur 3</div>
       <h2>Ongkir (<code>Store Shipping Charge</code>)</h2>
-      <p>Biaya kirim diinput manual dan ditagihkan <strong>terpisah</strong> dari invoice material.</p>
+      <p>Selain otomatis terbentuk dari Sales Order (Jalur 2 di atas), <code>Store Shipping Charge</code> juga bisa diinput manual langsung — misalnya ongkir susulan yang tidak terkait Sales Order tertentu.</p>
       <div class="spec-card">
         <div class="spec-head"><span class="doctype-name">Store Shipping Charge</span><span class="doctype-flag">Draft → Invoiced</span></div>
         <div class="table-scroll">
@@ -481,15 +489,15 @@
             <thead><tr><th>Field</th><th>Tipe</th><th>Keterangan</th></tr></thead>
             <tbody>
               <tr><td class="field-name">store</td><td class="field-type">Link → Store</td><td class="field-note">Wajib</td></tr>
-              <tr><td class="field-name">sales_order</td><td class="field-type">Link → Sales Order</td><td class="field-note">Opsional, referensi ke order material terkait</td></tr>
+              <tr><td class="field-name">sales_order</td><td class="field-type">Link → Sales Order</td><td class="field-note">Opsional; terisi otomatis kalau dibuat dari Jalur 2</td></tr>
               <tr><td class="field-name">customer, company</td><td class="field-type">read-only</td><td class="field-note">Auto-isi dari Store saat validate</td></tr>
               <tr><td class="field-name">amount</td><td class="field-type">Currency</td><td class="field-note">Input manual biaya kirim</td></tr>
-              <tr><td class="field-name">sales_invoice</td><td class="field-type">read-only</td><td class="field-note">Terisi setelah "Create Sales Invoice"</td></tr>
+              <tr><td class="field-name">sales_invoice</td><td class="field-type">read-only</td><td class="field-note">Terisi setelah invoice dibuat</td></tr>
             </tbody>
           </table>
         </div>
       </div>
-      <p class="wide">Tombol <strong>"Create Sales Invoice"</strong> → Sales Invoice baru &amp; terpisah ke <code>Store.partner</code>, 1 baris item (<code>shipping_item</code>). Hasilnya: <strong>1 Sales Order material bisa punya 2 invoice berbeda</strong> — barang dan ongkir tidak pernah digabung jadi satu invoice.</p>
+      <p class="wide">Tombol <strong>"Create Sales Invoice"</strong> (entri manual) → Sales Invoice baru &amp; terpisah ke <code>Store.partner</code>, 1 baris item (<code>shipping_item</code>), insert + <strong>langsung submit</strong>. Untuk yang dibuat otomatis dari Sales Order, fungsi yang sama dipanggil dengan <code>submit=False</code> — invoice-nya tetap <span class="status draft">● Draft</span> sampai staf submit manual. Hasilnya: <strong>1 Sales Order material bisa punya 2 invoice berbeda</strong> — barang dan ongkir tidak pernah digabung jadi satu invoice.</p>
     </section>
 
     <section id="sesi-pos">
@@ -592,6 +600,9 @@ Content-Type: application/json</pre></div>
             <tr><td class="field-name">Sales Invoice</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field, <code>depends_on: is_pos</code></td></tr>
             <tr><td class="field-name">Sales Invoice</td><td class="field-name">pos_reference</td><td class="field-type">Data</td><td class="field-note">Custom Field, idempotency §7.2</td></tr>
             <tr><td class="field-name">Sales Order</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field</td></tr>
+            <tr><td class="field-name">Sales Order</td><td class="field-name">shipping_amount</td><td class="field-type">Currency</td><td class="field-note">Custom Field, lihat Jalur 2</td></tr>
+            <tr><td class="field-name">Sales Order</td><td class="field-name">shipping_description</td><td class="field-type">Small Text</td><td class="field-note">Custom Field, lihat Jalur 2</td></tr>
+            <tr><td class="field-name">Sales Order</td><td class="field-name">store_shipping_charge</td><td class="field-type">Link Store Shipping Charge</td><td class="field-note">Custom Field, read-only, auto-isi saat submit</td></tr>
           </tbody>
         </table>
       </div>

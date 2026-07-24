@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 
 
-def create_sales_invoice_for_shipping_charge(doc):
+def create_sales_invoice_for_shipping_charge(doc, submit=True):
 	"""Post a Sales Invoice for a Store Shipping Charge. Kept as a separate
 	Sales Invoice from the material order on purpose, so store partners get
 	distinct invoices for goods vs. delivery cost."""
@@ -33,7 +33,8 @@ def create_sales_invoice_for_shipping_charge(doc):
 		},
 	)
 	si.insert(ignore_permissions=True)
-	si.submit()
+	if submit:
+		si.submit()
 
 	doc.sales_invoice = si.name
 	doc.status = "Invoiced"
