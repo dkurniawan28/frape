@@ -58,6 +58,22 @@ def compute_total_sales(store, from_date, to_date):
 	return flt(pos_invoice_total) + flt(sales_invoice_total)
 
 
+def get_fee_percentage(store):
+	"""The store's actual contracted rate, from its active PKS Agreement
+	(Store.active_pks, kept in sync by PKSAgreement.on_submit), falling back
+	to the flat Store Type rate only if the store has no active agreement.
+	Real contracted rates are negotiated per store and drift from the Store
+	Type default over time — always prefer the specific one."""
+	if store.active_pks:
+		settlement_model = frappe.db.get_value("Store Type", store.store_type, "settlement_model")
+		field = "royalty_percent" if settlement_model == "Royalty" else "profit_share_percent"
+		pks_rate = frappe.db.get_value("PKS Agreement", store.active_pks, field)
+		if pks_rate is not None:
+			return pks_rate
+
+	return frappe.db.get_value("Store Type", store.store_type, "fee_percentage") or 0
+
+
 def calculate_statement(doc):
 	"""Fill company / customer / total_sales / fee_percentage / fee_amount on a
 	Store Fee Statement, based on its store, store type and date range."""
@@ -65,7 +81,7 @@ def calculate_statement(doc):
 	if not store.store_type:
 		frappe.throw(_("Store {0} has no Store Type set.").format(store.name))
 
-	fee_percentage = frappe.db.get_value("Store Type", store.store_type, "fee_percentage") or 0
+	fee_percentage = get_fee_percentage(store)
 
 	doc.company = store.company
 	doc.customer = store.partner

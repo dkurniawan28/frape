@@ -30,7 +30,25 @@ def get_or_open_pos_opening_entry(pos_profile, company, user=None):
 			return entry.name
 		_close_pos_opening_entry(entry.name)
 
+	_close_other_profile_sessions_for_user(user, pos_profile)
+
 	return _open_new_pos_opening_entry(pos_profile, company, user)
+
+
+def _close_other_profile_sessions_for_user(user, pos_profile):
+	"""ERPNext only allows one Open POS Opening Entry per *user*, across all
+	POS Profiles — not just one per profile. If this API user already has a
+	session open for a different store, opening a new one fails with
+	"Cashier is currently assigned to another POS." Close it out first so
+	callers can freely switch between stores without knowing about this
+	constraint."""
+	other_open = frappe.get_all(
+		"POS Opening Entry",
+		filters={"user": user, "status": "Open", "pos_profile": ["!=", pos_profile]},
+		pluck="name",
+	)
+	for name in other_open:
+		_close_pos_opening_entry(name)
 
 
 def _close_pos_opening_entry(opening_entry_name):

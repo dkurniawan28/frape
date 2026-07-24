@@ -187,12 +187,14 @@
     border-radius: 4px; padding: 1rem 1.2rem; margin: 1.3rem 0;
   }
   .callout.warn { border-left-color: var(--warn); }
+  .callout.good { border-left-color: var(--good); }
   .callout p:last-child { margin-bottom: 0; }
   .callout .label {
     font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
     margin-bottom: 0.4rem; font-weight: 700; font-family: system-ui, sans-serif;
   }
   .callout.warn .label { color: var(--warn); }
+  .callout.good .label { color: var(--good); }
 
   /* overview diagram: 3 parallel lanes */
   .lanes-wrap { overflow-x: auto; margin: 1.6rem 0; }
@@ -290,6 +292,9 @@
   .oq-list { display: flex; flex-direction: column; gap: 0.9rem; margin: 1.25rem 0; }
   .oq-item { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0.7rem; padding: 0.9rem 1.05rem; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; }
   .oq-item .oq-mark { color: var(--warn); font-family: ui-monospace, monospace; font-size: 0.85rem; }
+  .oq-item .oq-mark.done { color: var(--good); }
+  .oq-item.done p { color: var(--ink-muted); }
+  .oq-item.done p strong { text-decoration: line-through; }
   .oq-item p { margin: 0; font-size: 0.92rem; max-width: none; }
 
   footer.doc-foot { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--ink-faint); font-size: 0.8rem; }
@@ -410,9 +415,9 @@
         </div>
       </div>
 
-      <div class="callout warn">
-        <div class="label">Batasan yang perlu diketahui</div>
-        <p><code>fee_percentage</code> di Store Type adalah <strong>satu angka untuk semua store bertipe sama</strong>. Kalau tarif riil berbeda per store (biasanya tercatat di <code>PKS Agreement.royalty_percent</code> / <code>profit_share_percent</code>), Store Fee Statement <strong>belum</strong> otomatis membaca angka per-PKS itu. Detail di § Batasan &amp; Ide Lanjutan.</p>
+      <div class="callout good">
+        <div class="label">Sudah diperbaiki</div>
+        <p><code>fee_percentage</code> sekarang diambil dari <strong>PKS Agreement aktif milik store itu</strong> (<code>Store.active_pks</code>, auto-sync saat PKS di-submit), bukan angka flat Store Type. Store Type tetap dipakai sebagai fallback kalau store belum pernah punya PKS Agreement submitted. Detail di § Piutang Fee Bulanan.</p>
       </div>
     </section>
 
@@ -439,7 +444,7 @@
       <h3>Alur generate</h3>
       <ol class="steps">
         <li><strong>Cek duplikat.</strong><p>Skip kalau sudah ada Store Fee Statement untuk store + periode yang sama — proses ini idempotent, aman dipanggil berulang.</p></li>
-        <li><strong>Hitung (<code>calculate_statement</code>).</strong><p><code>total_sales</code> = SUM(grand_total) dari POS Invoice + Sales Invoice (is_pos=1), submitted &amp; bukan return, untuk store &amp; periode itu. <code>fee_amount</code> = total_sales × fee_percentage / 100. Status → <span class="status calc">● Calculated</span>.</p></li>
+        <li><strong>Hitung (<code>calculate_statement</code>).</strong><p><code>total_sales</code> = SUM(grand_total) dari POS Invoice + Sales Invoice (is_pos=1), submitted &amp; bukan return, untuk store &amp; periode itu. <code>fee_percentage</code> = rate dari PKS Agreement aktif store itu (<code>royalty_percent</code>/<code>profit_share_percent</code> sesuai <code>settlement_model</code>), fallback ke <code>Store Type.fee_percentage</code> kalau tidak ada PKS aktif. <code>fee_amount</code> = total_sales × fee_percentage / 100. Status → <span class="status calc">● Calculated</span>.</p></li>
         <li><strong>Tagih (kalau fee_amount &gt; 0).</strong><p>Buat Sales Invoice baru ke <code>Store.partner</code>, 1 baris item (<code>fee_item</code>), langsung insert + submit. Status → <span class="status done">● Invoiced</span>, field <code>sales_invoice</code> terisi.</p></li>
       </ol>
 
@@ -560,7 +565,7 @@ Content-Type: application/json</pre></div>
           <tr><td class="pname">store</td><td class="preq req-yes">Wajib</td><td>Harus sudah punya <code>pos_profile</code> terisi</td></tr>
           <tr><td class="pname">items</td><td class="preq req-yes">Wajib</td><td><code>[{"item_code", "qty", "rate"?, "warehouse"?}]</code>. <code>warehouse</code> default ke <code>Store.warehouse</code>.</td></tr>
           <tr><td class="pname">payments</td><td class="preq req-yes">Wajib</td><td><code>[{"mode_of_payment", "amount"}]</code>, total harus menutup grand_total.</td></tr>
-          <tr><td class="pname">customer</td><td class="preq req-no">Opsional</td><td>Default: customer default di POS Profile store itu</td></tr>
+          <tr><td class="pname">customer</td><td class="preq req-no">Opsional</td><td>Default: <code>Store.partner</code> toko itu; fallback ke customer default POS Profile kalau store tidak punya partner</td></tr>
           <tr><td class="pname">posting_date</td><td class="preq req-no">Opsional</td><td>Default: hari ini</td></tr>
           <tr><td class="pname">pos_reference</td><td class="preq req-no">Sangat disarankan</td><td>ID transaksi dari POS eksternal. Kalau sudah pernah dipakai, balikin invoice yang sama (<code>duplicate: true</code>) — bukan buat baru.</td></tr>
         </tbody>
@@ -613,7 +618,7 @@ Content-Type: application/json</pre></div>
       <div class="kicker">Untuk diskusi lanjutan</div>
       <h2>Batasan &amp; ide lanjutan</h2>
       <div class="oq-list">
-        <div class="oq-item"><span class="oq-mark">!</span><p><strong>Fee percentage per-store vs per-Store-Type.</strong> Kalau tarif riil beda per store, Store Fee Statement perlu diarahkan baca dari PKS Agreement aktif milik store itu, bukan dari Store Type.</p></div>
+        <div class="oq-item done"><span class="oq-mark done">✓</span><p><strong>Fee percentage per-store vs per-Store-Type.</strong> Sudah diperbaiki — Store Fee Statement sekarang baca dari PKS Agreement aktif milik store itu (<code>Store.active_pks</code>), fallback ke Store Type kalau belum ada PKS.</p></div>
         <div class="oq-item"><span class="oq-mark">!</span><p><strong>create_store_sales_order belum validasi stok</strong> saat insert — memang perilaku standar ERPNext, baru dicek saat Delivery Note.</p></div>
         <div class="oq-item"><span class="oq-mark">!</span><p><strong>Belum ada Customer Portal / self-service</strong> untuk partner store order sendiri dari luar. API saat ini untuk dipanggil sistem eksternal (POS/ordering app milik store), bukan diakses langsung end-user.</p></div>
         <div class="oq-item"><span class="oq-mark">!</span><p><strong>create_pos_sale belum menangani retur/void.</strong> Kalau transaksi dibatalkan di sisi store setelah ter-post, pembatalannya perlu ditangani manual (cancel Sales Invoice) atau butuh endpoint tambahan <code>create_pos_return</code>.</p></div>

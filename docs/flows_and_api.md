@@ -116,9 +116,28 @@ Untuk tiap store eligible, per periode (default: bulan kalender sebelumnya):
 2. `calculate_statement()`:
    - `total_sales` = SUM(`grand_total`) dari `POS Invoice` (submitted, bukan return) **+**
      `Sales Invoice` (`is_pos=1`, submitted, bukan return) untuk store & periode itu.
-   - `fee_percentage` = `Store Type.fee_percentage` milik store itu.
+   - `fee_percentage` = `get_fee_percentage()` (lihat §3.2.1) — rate kontrak riil dari
+     PKS Agreement yang aktif untuk store itu, bukan rate flat Store Type.
    - `fee_amount` = `total_sales × fee_percentage / 100`.
    - Status → `Calculated`.
+
+#### 3.2.1 Sumber `fee_percentage`: PKS Agreement aktif, bukan flat Store Type
+
+Tiap store punya rate kontrak sendiri (`PKS Agreement.royalty_percent` untuk store
+`Royalty`, `profit_share_percent` untuk `Profit Share`) yang bisa beda dari rate default
+Store Type dan berubah dari waktu ke waktu (renegosiasi kontrak). `get_fee_percentage()`:
+
+1. Kalau store punya `active_pks` (field native di `Store`, otomatis di-sync oleh
+   `PKSAgreement.on_submit()` — PKS Agreement yang baru disubmit jadi `Active`, yang lama
+   otomatis jadi `Expired`) → ambil `royalty_percent` atau `profit_share_percent` dari PKS
+   itu (field mana yang dipakai ditentukan dari `Store Type.settlement_model`).
+2. Kalau tidak ada `active_pks` sama sekali (store belum pernah punya PKS Agreement
+   submitted) → fallback ke rate flat `Store Type.fee_percentage`.
+
+Ini penting karena rate flat Store Type gampang basi begitu ada store yang
+renegosiasi kontrak (kejadian nyata: Store Bekasi awalnya 12% lalu direnegosiasi jadi
+10% lewat PKS-2026-002, sementara Store Type FRC tetap di rate default 9% — kalau
+`fee_percentage` dihitung dari Store Type, Bekasi jadi kurang tertagih terus).
 3. Kalau `fee_amount` > 0 → `create_sales_invoice_for_statement()`: buat **Sales Invoice**
    baru ke `Customer` = `Store.partner`, 1 baris item (`Store Partnership Settings.fee_item`,
    qty=1, rate=fee_amount), langsung **insert + submit**. Status Store Fee Statement →
@@ -313,7 +332,7 @@ Sales Invoice **submitted** (bukan draft — transaksi dianggap sudah final & te
 | `store` | string | ✅ | Nama Store. **Harus** sudah punya `pos_profile` terisi (§1.2), kalau belum → error `Store {0} has no POS Profile configured.` |
 | `items` | list of object (atau JSON string) | ✅ | `[{"item_code", "qty", "rate"?, "warehouse"?}]`. `warehouse` default ke `Store.warehouse` kalau tidak dikirim. |
 | `payments` | list of object (atau JSON string) | ✅ | `[{"mode_of_payment", "amount"}]`, total harus menutup `grand_total` (aturan standar ERPNext POS). |
-| `customer` | string | — | Default: customer default di POS Profile store itu. |
+| `customer` | string | — | Default: `Store.partner` toko itu; kalau store tidak punya partner (mis. store `OWN`), fallback ke customer default di POS Profile. |
 | `posting_date` | date string | — | Default: hari ini. |
 | `pos_reference` | string | — | ID transaksi dari sistem POS eksternal. Kalau dikirim dan sudah pernah dipakai sebelumnya, **tidak** buat invoice baru — langsung balikin invoice yang sudah ada (`duplicate: true`). Pakai ini supaya retry akibat network gagal tidak menghasilkan invoice dobel. |
 
@@ -368,9 +387,7 @@ Semua Custom Field disinkronkan lewat patch (`bench migrate`), didefinisikan ter
 
 ## 9. Known Gaps / Ide Lanjutan
 
-- **Fee percentage per-store vs per-Store-Type** (lihat §1.1) — kalau tarif riil beda per
-  store, `Store Fee Statement` perlu diarahkan baca dari PKS Agreement aktif, bukan Store
-  Type.
+- ~~Fee percentage per-store vs per-Store-Type~~ — **sudah diperbaiki**, lihat §3.2.1.
 - **`create_store_sales_order` belum validasi stok** — Sales Order tidak cek ketersediaan
   stok saat insert (memang standar ERPNext, baru dicek saat Delivery Note).
 - **Belum ada Customer Portal / self-service** untuk partner store order sendiri dari

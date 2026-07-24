@@ -80,7 +80,9 @@ def create_pos_sale(store, items, payments, customer=None, posting_date=None, po
 		items: list of {"item_code", "qty", "rate" (optional), "warehouse"
 			(optional, defaults to the store's warehouse)}.
 		payments: list of {"mode_of_payment", "amount"} covering the total.
-		customer: optional; defaults to the POS Profile's default customer.
+		customer: optional; defaults to the store's partner (Store.partner),
+			falling back to the POS Profile's default customer if the store
+			has none.
 		posting_date: optional; defaults to today.
 		pos_reference: optional external transaction id. If a Sales Invoice
 			was already posted with this reference, that same invoice is
@@ -95,7 +97,7 @@ def create_pos_sale(store, items, payments, customer=None, posting_date=None, po
 		frappe.throw(_("Not permitted to create Sales Invoice"), frappe.PermissionError)
 
 	store_doc = frappe.db.get_value(
-		"Store", store, ["name", "company", "warehouse", "pos_profile"], as_dict=True
+		"Store", store, ["name", "company", "warehouse", "pos_profile", "partner"], as_dict=True
 	)
 	if not store_doc:
 		frappe.throw(_("Store {0} not found").format(store))
@@ -129,7 +131,14 @@ def create_pos_sale(store, items, payments, customer=None, posting_date=None, po
 	si.pos_profile = store_doc.pos_profile
 	si.pos_opening_entry = opening_entry
 	si.company = store_doc.company
-	si.customer = customer or frappe.db.get_value("POS Profile", store_doc.pos_profile, "customer")
+	# Bill the store's own partner/franchisee first, same as every other
+	# receivable in this app (Store Fee Statement, Store Shipping Charge,
+	# Sales Order material). Only fall back to the POS Profile's generic
+	# default customer for stores with no partner (e.g. company-owned
+	# stores selling to true walk-in customers).
+	si.customer = customer or store_doc.partner or frappe.db.get_value(
+		"POS Profile", store_doc.pos_profile, "customer"
+	)
 	si.store = store_doc.name
 	si.set_warehouse = store_doc.warehouse
 	si.posting_date = posting_date or today()
