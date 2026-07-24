@@ -6,6 +6,9 @@ Manajemen tipe store dan PKS partner
 ongkir) dan API (`create_store_sales_order`, `create_pos_sale`): [docs/flows_and_api.md](docs/flows_and_api.md)
 (versi halaman visual: [docs/flows_and_api.html](docs/flows_and_api.html))
 
+🐳 Build image Docker (ERPNext + app ini) langsung dari repo ini, tanpa `docker cp`/
+`docker commit` manual: [deploy/README.md](deploy/README.md)
+
 ### Installation
 
 You can install this app using the [bench](https://github.com/frappe/bench) CLI:
