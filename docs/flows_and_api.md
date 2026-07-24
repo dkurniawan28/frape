@@ -328,7 +328,59 @@ Sudah diverifikasi 3 skenario: onboarding (PKS pertama → fee tercatat), upgrad
 renewal (Store Type sama → tidak ada `Store Onboarding Fee` yang terbentuk sama
 sekali).
 
-### 4.5 Takeover jadi Store `OWN` — bukan flow baru, pakai fitur ERPNext yang sudah ada
+### 4.5 `Store Package` — starter kit produk, **independen total dari fee**
+
+Franchise biasanya punya paket turunan berdasarkan ukuran lokasi (mis. luas kecil vs
+besar) yang menentukan produk apa saja yang dikirim & referensi layout — ini **sumbu
+yang sama sekali beda** dari Store Type:
+
+- **Store Type** → urusan **fee**: royalty/profit-share recurring (§3.2.1) + one-time
+  Onboarding/Upgrade fee (§4.1-§4.4).
+- **Store Package** → urusan **barang**: starter kit produk otomatis via Sales Order.
+  **Tidak menyentuh fee/royalty/price list/tax rule sama sekali** — kalau cuma
+  package yang berubah (Store Type tetap), tidak ada `Store Onboarding Fee` yang
+  terbentuk, cuma Sales Order.
+
+| Field `Store Package` | Keterangan |
+|---|---|
+| `package_code`, `package_name` | mis. "Paket Kecil", "Paket Besar" |
+| `store_type` | Link Store Type — paket ini buat tipe apa; dipakai buat filter opsi Package di Store |
+| `min_area_sqm` / `max_area_sqm` | Acuan luas lokasi (informasi saja, tidak divalidasi otomatis) |
+| `included_items` | Child table (Item + Qty) — starter kit |
+| `layout_reference` | Attachment + deskripsi |
+
+**Store** dapat field baru `package` (Link → Store Package), difilter berdasarkan
+`store_type` yang dipilih (`store.js`, pola sama seperti filter customer→store di
+§2.1, tapi ini di dalam satu form yang sama).
+
+**PKS Agreement** dapat field baru `package` — snapshot read-only, fetched dari
+`store.package` (persis pola `store_type` yang sudah ada), supaya bisa dibandingkan
+antar PKS.
+
+**Trigger** (`pks_agreement.py` → `create_starter_kit_order()` →
+`store_partnership.store_package.create_starter_kit_order_if_applicable()`), jalan
+di `on_submit`, **independen sepenuhnya** dari pengecekan onboarding fee di §4.2:
+
+1. Cari PKS Agreement lain yang submitted untuk store yang sama.
+2. Bandingkan `package` PKS ini vs PKS sebelumnya (termasuk kasus tidak ada PKS
+   sebelumnya — dianggap "beda").
+3. Kalau **sama** → berhenti, tidak ada apa-apa.
+4. Kalau **beda** dan `package` ini punya `included_items` → buat **Sales Order
+   Draft** untuk store itu, isi item + qty dari `included_items`, `warehouse` default
+   dari `Store.warehouse`. Staf review/adjust seperti alur material biasa (§5).
+
+Matriks hasil (2 kondisi independen, store_type vs package):
+
+| Store Type | Package | Hasil |
+|---|---|---|
+| Beda (pertama kali / upgrade) | Beda (pertama kali / ganti) | `Store Onboarding Fee` **+** Sales Order (kasus PKS pertama — keduanya kebetulan sama-sama "baru") |
+| Beda (upgrade) | Sama | Cuma `Store Onboarding Fee` (fee_type Upgrade), **tidak ada** Sales Order baru |
+| Sama | Beda (ganti package) | Cuma Sales Order, **tidak ada** fee sama sekali |
+| Sama | Sama | Tidak ada keduanya — renewal murni |
+
+Sudah diverifikasi ke-4 kombinasi di atas persis sesuai tabel.
+
+### 4.6 Takeover jadi Store `OWN` — bukan flow baru, pakai fitur ERPNext yang sudah ada
 
 Kejadian lain yang mirip tapi **arah pembayarannya kebalikan** (company yang bayar ke
 partner, bukan partner bayar ke company) — sengaja **tidak** dibuatkan mekanisme
@@ -579,9 +631,13 @@ POS store (mis. ID transaksi internal mereka). Tanpa ini, retry otomatis dari si
 | Store Type | `onboarding_fee` | Currency | Native field, harga acuan onboarding — lihat §4.1 |
 | Store Type | `upgrade_fee` | Currency | Native field, harga acuan upgrade — lihat §4.1 |
 | Store | `pos_profile` | Link POS Profile | Native field |
+| Store | `package` | Link Store Package | Native field, difilter berdasarkan store_type — lihat §4.5 |
 | PKS Agreement | `fee_amount` | Currency | Native field, nominal final onboarding/upgrade fee — lihat §4.1 |
+| PKS Agreement | `package` | Data (fetched, read-only) | Native field, snapshot Store.package — lihat §4.5 |
 | Store Partnership Settings | `onboarding_fee_item` | Link Item | Native field, default `Franchise Onboarding Fee` |
-| Store Onboarding Fee | (semua field) | — | Doctype baru, lihat §4.3 |
+| Store Onboarding Fee | (semua field) | — | Doctype baru, lihat §4.4 |
+| Store Package | (semua field) | — | Doctype baru, lihat §4.5 |
+| Store Package Item | (semua field) | — | Child table dari Store Package (item_code, qty) |
 | POS Invoice | `store` | Link Store | Custom Field |
 | POS Invoice | `pos_reference` | Data | Custom Field, untuk idempotency §8.2 |
 | Sales Invoice | `store` | Link Store | Custom Field, `depends_on: is_pos` — dipakai kalau ada data lama dari mode `is_pos` sebelum switch ke POS Invoice |

@@ -12,6 +12,7 @@
   "status",
   "cb0",
   "store_type",
+  "package",
   "partner",
   "sb0",
   "effective_date",
@@ -62,6 +63,14 @@
    "fieldname": "store_type",
    "fieldtype": "Data",
    "label": "Store Type",
+   "read_only": 1
+  },
+  {
+   "description": "Snapshot dari Store.package saat PKS ini dibuat — dipakai untuk bandingkan dengan package di PKS sebelumnya (kalau beda, otomatis dibuatkan Sales Order starter kit, independen dari perubahan Store Type/fee).",
+   "fetch_from": "store.package",
+   "fieldname": "package",
+   "fieldtype": "Data",
+   "label": "Package (Snapshot)",
    "read_only": 1
   },
   {

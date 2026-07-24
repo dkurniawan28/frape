@@ -546,6 +546,41 @@
         <p><strong>Onboarding</strong> (PKS pertama → fee tercatat), <strong>Upgrade</strong> (ganti Store Type → fee tercatat, PKS lama otomatis Expired seperti biasa), dan <strong>Renewal</strong> (Store Type sama → tidak ada Store Onboarding Fee yang terbentuk sama sekali).</p>
       </div>
 
+      <h3><code>Store Package</code> — starter kit produk, independen total dari fee</h3>
+      <p>Franchise biasanya punya paket turunan berdasarkan ukuran lokasi yang menentukan produk yang dikirim &amp; referensi layout — sumbu yang sama sekali beda dari Store Type. <strong>Store Type</strong> urusan fee (royalty/profit-share + onboarding/upgrade fee di atas). <strong>Store Package</strong> urusan barang (starter kit via Sales Order) — <strong>tidak menyentuh fee/royalty/price list/tax rule sama sekali</strong>.</p>
+      <div class="spec-card">
+        <div class="spec-head"><span class="doctype-name">Store Package</span><span class="doctype-flag">master</span></div>
+        <div class="table-scroll">
+          <table class="spec">
+            <thead><tr><th>Field</th><th>Tipe</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td class="field-name">package_code, package_name</td><td class="field-type">Data</td><td class="field-note">mis. "Paket Kecil", "Paket Besar"</td></tr>
+              <tr><td class="field-name">store_type</td><td class="field-type">Link → Store Type</td><td class="field-note">Paket ini buat tipe apa; buat filter opsi Package di Store</td></tr>
+              <tr><td class="field-name">min_area_sqm, max_area_sqm</td><td class="field-type">Float</td><td class="field-note">Acuan luas lokasi (informasi saja)</td></tr>
+              <tr><td class="field-name">included_items</td><td class="field-type">Table (Item + Qty)</td><td class="field-note">Starter kit</td></tr>
+              <tr><td class="field-name">layout_reference</td><td class="field-type">Attach</td><td class="field-note">+ deskripsi</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p><strong>Store.package</strong> (Link → Store Package, difilter berdasarkan store_type yang dipilih) dan <strong>PKS Agreement.package</strong> (snapshot read-only, fetched dari store.package, persis pola store_type) — supaya package bisa dibandingkan antar PKS.</p>
+      <p class="wide">Trigger di <code>on_submit</code> PKS Agreement, <strong>independen sepenuhnya</strong> dari pengecekan onboarding fee: bandingkan package PKS ini vs PKS sebelumnya (termasuk kasus tidak ada PKS sebelumnya) → kalau beda dan punya included_items, buat <strong>Sales Order Draft</strong> berisi item+qty dari included_items, warehouse default dari Store.warehouse.</p>
+      <div class="table-scroll">
+        <table class="spec">
+          <thead><tr><th>Store Type</th><th>Package</th><th>Hasil</th></tr></thead>
+          <tbody>
+            <tr><td class="field-name">Beda</td><td class="field-name">Beda</td><td class="field-note">Store Onboarding Fee + Sales Order (PKS pertama — kebetulan sama-sama baru)</td></tr>
+            <tr><td class="field-name">Beda</td><td class="field-name">Sama</td><td class="field-note">Cuma Store Onboarding Fee (Upgrade), tidak ada Sales Order baru</td></tr>
+            <tr><td class="field-name">Sama</td><td class="field-name">Beda</td><td class="field-note">Cuma Sales Order, tidak ada fee sama sekali</td></tr>
+            <tr><td class="field-name">Sama</td><td class="field-name">Sama</td><td class="field-note">Tidak ada keduanya — renewal murni</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout good">
+        <div class="label">Diverifikasi 4 kombinasi</div>
+        <p>Ke-4 baris matriks di atas sudah dites persis dan hasilnya sesuai.</p>
+      </div>
+
       <h3>Takeover jadi Store <code>OWN</code> — bukan flow baru</h3>
       <p>Kejadian mirip tapi arah pembayarannya kebalikan (company bayar ke partner, bukan sebaliknya) — sengaja <strong>tidak</strong> dibuatkan mekanisme custom, base price juga sengaja tidak dipatok (nominal buyout terlalu variatif). Cukup 3 langkah manual pakai fitur ERPNext bawaan:</p>
       <ol class="steps">
@@ -699,9 +734,12 @@ Content-Type: application/json</pre></div>
             <tr><td class="field-name">Store Type</td><td class="field-name">onboarding_fee</td><td class="field-type">Currency</td><td class="field-note">Native field, harga acuan onboarding</td></tr>
             <tr><td class="field-name">Store Type</td><td class="field-name">upgrade_fee</td><td class="field-type">Currency</td><td class="field-note">Native field, harga acuan upgrade</td></tr>
             <tr><td class="field-name">Store</td><td class="field-name">pos_profile</td><td class="field-type">Link POS Profile</td><td class="field-note">Native field</td></tr>
+            <tr><td class="field-name">Store</td><td class="field-name">package</td><td class="field-type">Link Store Package</td><td class="field-note">Native field, difilter berdasarkan store_type</td></tr>
             <tr><td class="field-name">PKS Agreement</td><td class="field-name">fee_amount</td><td class="field-type">Currency</td><td class="field-note">Native field, nominal final onboarding/upgrade fee</td></tr>
+            <tr><td class="field-name">PKS Agreement</td><td class="field-name">package</td><td class="field-type">Data (fetched)</td><td class="field-note">Native field, snapshot Store.package</td></tr>
             <tr><td class="field-name">Store Partnership Settings</td><td class="field-name">onboarding_fee_item</td><td class="field-type">Link Item</td><td class="field-note">Native field, default "Franchise Onboarding Fee"</td></tr>
             <tr><td class="field-name">Store Onboarding Fee</td><td class="field-name">(semua field)</td><td class="field-type">—</td><td class="field-note">Doctype baru, lihat § Onboarding &amp; Upgrade Fee</td></tr>
+            <tr><td class="field-name">Store Package</td><td class="field-name">(semua field)</td><td class="field-type">—</td><td class="field-note">Doctype baru, lihat § Onboarding &amp; Upgrade Fee</td></tr>
             <tr><td class="field-name">POS Invoice</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field</td></tr>
             <tr><td class="field-name">POS Invoice</td><td class="field-name">pos_reference</td><td class="field-type">Data</td><td class="field-note">Custom Field, idempotency §8.2</td></tr>
             <tr><td class="field-name">Sales Invoice</td><td class="field-name">store</td><td class="field-type">Link Store</td><td class="field-note">Custom Field, <code>depends_on: is_pos</code> — legacy, dari mode sebelum switch ke POS Invoice</td></tr>

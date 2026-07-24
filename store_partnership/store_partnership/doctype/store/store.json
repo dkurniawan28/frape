@@ -9,6 +9,7 @@
  "field_order": [
   "store_name",
   "store_type",
+  "package",
   "company",
   "cb0",
   "partner",
@@ -33,6 +34,13 @@
    "label": "Store Type",
    "options": "Store Type",
    "reqd": 1
+  },
+  {
+   "description": "Paket franchise berdasarkan ukuran lokasi (menentukan starter kit produk & referensi layout) — tidak berhubungan dengan Store Type/fee. Opsi difilter berdasarkan Store Type di atas.",
+   "fieldname": "package",
+   "fieldtype": "Link",
+   "label": "Package",
+   "options": "Store Package"
   },
   {
    "fieldname": "company",
